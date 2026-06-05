@@ -1,0 +1,61 @@
+# ============================================================
+# DDPM (Denoising Diffusion Probabilistic Model) Configuration
+# Stage 2: Latent diffusion for healthy brain MRI distribution
+# ============================================================
+
+model:
+  # U-Net architecture
+  in_channels: 4                  # Matches VAE latent channels
+  out_channels: 4
+  base_channels: 128              # Base channel width
+  channel_multipliers: [1, 2, 4, 4]  # Channel scaling per resolution
+  num_res_blocks: 2               # ResNet blocks per level
+  attention_resolutions: [16, 8]  # Apply attention at 16x16 and 8x8
+  num_heads: 4                    # Attention heads
+  dropout: 0.0                    # No dropout (small dataset, need memorization)
+  use_gradient_checkpointing: true
+
+  # Class conditioning (Classifier-Free Guidance)
+  num_classes: 2                  # 0=healthy, 1=anomalous
+  class_dropout_prob: 0.1         # Probability of dropping class label during training
+
+diffusion:
+  num_timesteps: 1000
+  schedule_type: "linear"         # "linear" or "cosine"
+  beta_start: 1.0e-4
+  beta_end: 0.02
+
+  # DDIM sampling
+  ddim_steps: 50                  # Inference steps (vs 1000 for full DDPM)
+  ddim_eta: 0.0                   # 0=deterministic, 1=stochastic (full DDPM)
+
+  # Classifier-Free Guidance
+  guidance_scale: 3.0             # w in CFG formula
+
+training:
+  learning_rate: 2.0e-4
+  weight_decay: 0.01
+  batch_size: 32                  # Latents are small (4x32x32)
+  max_steps: 200000               # Total training steps
+  warmup_steps: 1000
+
+  # Optimization
+  use_amp: true
+  grad_clip_norm: 1.0
+  ema_decay: 0.9999
+
+  # Logging & checkpointing
+  log_every_steps: 100
+  sample_every_steps: 5000        # Generate samples for visual inspection
+  save_every_steps: 10000
+  num_sample_images: 16           # Number of images to generate during sampling
+
+data:
+  latent_dir: "data/latents"
+  num_workers: 4
+  pin_memory: true
+
+paths:
+  checkpoint_dir: "checkpoints/ddpm"
+  log_dir: "results/logs/ddpm"
+  sample_dir: "results/samples/ddpm"

@@ -1,0 +1,43 @@
+# ============================================================
+# Evaluation Configuration
+# Anomaly detection + generation quality assessment
+# ============================================================
+
+anomaly_detection:
+  # Reconstruction-based anomaly detection settings
+  t_start_values: [100, 200, 300, 400, 500]   # Noise levels to sweep
+  guidance_scale: 3.0
+  ddim_steps: 50
+  
+  # Post-processing
+  gaussian_sigma: 2.0            # Smoothing for anomaly maps
+  threshold_percentile: 95       # For binary mask generation
+
+  # Metrics
+  compute_auroc: true
+  compute_auprc: true
+  compute_dice: true
+  compute_iou: true
+
+generation:
+  # Synthetic data generation settings
+  num_samples: 500               # Number of synthetic images to generate
+  guidance_scale: 3.0
+  ddim_steps: 50
+  batch_size: 8
+
+  # Quality metrics
+  compute_fid: true
+  compute_ssim: true
+  compute_lpips: true
+  compute_ms_ssim: true
+  compute_diversity: true        # Pairwise LPIPS among generated samples
+
+paths:
+  test_healthy_dir: "data/processed/test/healthy"
+  test_anomalous_dir: "data/processed/test/anomalous"
+  vae_checkpoint: "checkpoints/vae/best.pt"
+  ddpm_checkpoint: "checkpoints/ddpm/best.pt"
+  output_dir: "results/evaluation"
+  anomaly_maps_dir: "results/anomaly_maps"
+  synthetic_dir: "results/synthetic"

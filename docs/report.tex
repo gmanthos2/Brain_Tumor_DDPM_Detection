@@ -1,0 +1,162 @@
+\documentclass[conference]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{xcolor}
+
+\title{Diffusion-Based Anomaly Detection and Synthetic Generation for Brain MRI Analysis}
+\author{
+  \IEEEauthorblockN{George [Last Name]}
+  \IEEEauthorblockA{[Affiliation] \\ [Email]}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We present a latent diffusion model for brain MRI anomaly detection and synthetic image generation. A Variational Autoencoder (VAE) compresses 256$\times$256 grayscale brain MRI slices into a compact latent space, where a Denoising Diffusion Probabilistic Model (DDPM) learns the distribution of healthy brain anatomy using Classifier-Free Guidance. For anomaly detection, input images are partially noised and reconstructed conditioned on the healthy class; reconstruction errors localize pathological regions such as tumors. For data augmentation, the model generates high-quality synthetic brain MRIs by sampling from the learned distribution. We evaluate anomaly detection using AUROC and AUPRC, and generation quality using FID, SSIM, and LPIPS. Additionally, we provide explainability through attention map visualization and denoising trajectory analysis, and discuss ethical considerations for clinical deployment.
+\end{abstract}
+
+% ============================================================
+\section{Introduction}
+\label{sec:introduction}
+% - Medical imaging challenges: limited data, class imbalance
+% - Motivation for generative models in medical AI
+% - Overview of diffusion models (DDPM, LDM)
+% - Contributions of this work
+% ============================================================
+
+\section{Related Work}
+\label{sec:related_work}
+
+\subsection{Diffusion Models}
+% - DDPM (Ho et al., 2020)
+% - DDIM (Song et al., 2021)
+% - Latent Diffusion Models (Rombach et al., 2022)
+% - Classifier-Free Guidance (Ho & Salimans, 2022)
+
+\subsection{Anomaly Detection in Medical Imaging}
+% - Reconstruction-based methods (VAE, AE)
+% - Diffusion-based anomaly detection: AnoDDPM, THOR, mDDPM
+% - Comparison with discriminative approaches
+
+\subsection{Synthetic Medical Image Generation}
+% - GANs for medical imaging
+% - Diffusion models for medical synthesis
+% - Privacy-preserving generation
+
+% ============================================================
+\section{Methodology}
+\label{sec:methodology}
+
+\subsection{Architecture Overview}
+% - Two-stage pipeline: VAE + DDPM
+% - Figure: Architecture diagram
+
+\subsection{Variational Autoencoder}
+% - AutoencoderKL architecture
+% - Training objective: L1 + LPIPS + KL
+% - Compression: 256x256 -> 32x32x4
+
+\subsection{Latent Diffusion Model}
+% - U-Net architecture with self-attention
+% - Noise schedule (linear)
+% - Training objective: simplified noise prediction loss
+
+\subsection{Classifier-Free Guidance}
+% - Conditional vs unconditional training
+% - CFG inference formula
+% - Guidance scale selection
+
+\subsection{Anomaly Detection Pipeline}
+% - Partial noising at t_start
+% - DDIM reconstruction conditioned on healthy
+% - Reconstruction error computation
+% - Algorithm box
+
+\subsection{Synthetic Image Generation}
+% - Full DDIM sampling from noise
+% - Quality control measures
+
+% ============================================================
+\section{Experimental Setup}
+\label{sec:experiments}
+
+\subsection{Dataset}
+% - Brain Tumor Detection dataset (Kaggle)
+% - 1500 healthy + 1500 anomalous brain MRIs
+% - Preprocessing: grayscale, 256x256, normalize [-1,1]
+% - Train/Val/Test split (70/15/15)
+
+\subsection{Implementation Details}
+% - VAE: architecture details, training hyperparameters
+% - DDPM: U-Net details, training steps, EMA
+% - Hardware: NVIDIA RTX 4060 (8GB VRAM)
+% - Memory optimizations: gradient checkpointing, AMP, grad accumulation
+
+\subsection{Evaluation Metrics}
+% - Anomaly detection: AUROC, AUPRC, F1, Sensitivity, Specificity
+% - Generation quality: FID, SSIM, LPIPS, Diversity
+
+% ============================================================
+\section{Results}
+\label{sec:results}
+
+\subsection{VAE Reconstruction Quality}
+% - Table: SSIM, PSNR on validation set
+% - Figure: reconstruction examples
+
+\subsection{Anomaly Detection Performance}
+% - Table: AUROC, AUPRC, F1 at various t_start values
+% - Figure: ROC curve
+% - Figure: Anomaly score distributions (healthy vs anomalous)
+% - Figure: Anomaly heatmap examples
+% - Effect of guidance scale
+
+\subsection{Synthetic Image Quality}
+% - Table: FID, SSIM, LPIPS scores
+% - Figure: Grid of generated samples
+% - Diversity analysis
+
+\subsection{Explainability Analysis}
+% - Figure: Attention maps at different denoising steps
+% - Figure: Denoising trajectory comparison (healthy vs anomalous)
+% - Grad-CAM analysis
+
+% ============================================================
+\section{Discussion}
+\label{sec:discussion}
+% - Analysis of results
+% - Failure cases and limitations
+% - Comparison with related methods
+% - Clinical applicability
+
+% ============================================================
+\section{Ethical Considerations}
+\label{sec:ethics}
+% - Data privacy and memorization risk
+% - Bias in the training data
+% - Safe use of synthetic data
+% - Regulatory and clinical deployment concerns
+
+% ============================================================
+\section{Conclusion}
+\label{sec:conclusion}
+% - Summary of contributions
+% - Key findings
+% - Future work: 3D volumes, multi-modal, larger datasets
+
+% ============================================================
+\section*{Acknowledgments}
+% Acknowledge dataset providers, compute resources, etc.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,49 @@
+# ============================================================
+# VAE (Variational Autoencoder) Configuration
+# Stage 1: Perceptual compression of brain MRI to latent space
+# ============================================================
+
+model:
+  spatial_dims: 2
+  in_channels: 1                  # Grayscale brain MRI
+  out_channels: 1
+  latent_channels: 4              # Latent space channels
+  num_channels: [64, 128, 256, 256]   # Encoder/decoder channel progression
+  num_res_blocks: 2               # ResNet blocks per resolution level
+  attention_levels: [false, false, true, true]  # Attention at lower resolutions
+  norm_num_groups: 32
+  with_encoder_nonlocal_attn: true
+  with_decoder_nonlocal_attn: true
+
+training:
+  learning_rate: 1.0e-4
+  weight_decay: 0.01
+  batch_size: 4                   # Small batch for 8GB VRAM
+  gradient_accumulation_steps: 8  # Effective batch size = 32
+  num_epochs: 150
+  warmup_epochs: 5
+
+  # Loss weights
+  reconstruction_weight: 1.0     # L1 reconstruction loss
+  perceptual_weight: 0.5         # LPIPS perceptual loss
+  kl_weight: 1.0e-6              # KL divergence (beta-VAE style)
+
+  # Optimization
+  use_amp: true                  # Mixed precision training
+  grad_clip_norm: 1.0
+  ema_decay: 0.999               # Exponential moving average
+
+  # Checkpointing
+  save_every_epochs: 10
+  val_every_epochs: 5
+
+data:
+  image_size: 256                # Resize all images to 256x256
+  num_workers: 4
+  pin_memory: true
+
+paths:
+  train_dir: "data/processed/train/healthy"
+  val_dir: "data/processed/val/healthy"
+  checkpoint_dir: "checkpoints/vae"
+  log_dir: "results/logs/vae"
