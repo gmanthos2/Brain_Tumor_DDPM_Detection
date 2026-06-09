@@ -28,6 +28,9 @@ from src.utils.helpers import get_device, ensure_dir, set_seed
 class SyntheticGenerator:
     """
     Generates synthetic brain MRI images from the learned distribution.
+
+    Handles latent denormalization: the DDPM operates in normalized
+    latent space ~N(0,1), but the VAE decoder expects raw-scale latents.
     """
 
     def __init__(
@@ -36,6 +39,7 @@ class SyntheticGenerator:
         ddpm_config_path: str,
         vae_checkpoint_path: str,
         ddpm_checkpoint_path: str,
+        latent_stats_path: str = None,
         device: torch.device = None,
     ):
         self.device = device or get_device()
@@ -75,6 +79,18 @@ class SyntheticGenerator:
             num_classes=ddpm_config.model.num_classes,
         ).to(self.device)
         self.diffusion.eval()
+
+        # Load latent normalization stats for denormalization
+        if latent_stats_path is None:
+            latent_stats_path = str(project_root / "data" / "latents" / "latent_stats.pt")
+        stats = torch.load(latent_stats_path, map_location=self.device, weights_only=True)
+        self.latent_mean = stats["mean"].view(1, -1, 1, 1).to(self.device)  # (1, C, 1, 1)
+        self.latent_std = stats["std"].view(1, -1, 1, 1).to(self.device)    # (1, C, 1, 1)
+        print(f"Loaded latent stats: mean={stats['mean'].tolist()}, std={stats['std'].tolist()}")
+
+    def denormalize_latents(self, z_normalized: torch.Tensor) -> torch.Tensor:
+        """Convert normalized latents back to raw VAE latent scale."""
+        return z_normalized * self.latent_std + self.latent_mean
 
     @torch.no_grad()
     def generate(
@@ -119,6 +135,9 @@ class SyntheticGenerator:
                 num_steps=ddim_steps,
                 device=self.device,
             )
+
+            # Denormalize from DDPM space → raw VAE latent scale
+            latents = self.denormalize_latents(latents)
 
             # Decode to image space
             images = self.vae.decode(latents)

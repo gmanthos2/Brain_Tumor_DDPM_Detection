@@ -89,11 +89,11 @@ class LatentDataset(Dataset):
     """
     PyTorch Dataset for precomputed VAE latent tensors.
 
-    Loads .pt files containing latent representations for efficient
-    DDPM training without needing the VAE encoder at each step.
+    Loads all latents from a single consolidated .pt file for maximum
+    throughput. One torch.load call for ~17MB, then pure tensor indexing.
 
     Args:
-        latent_dir: Path to directory containing .pt latent files
+        latent_dir: Path to directory containing all_latents.pt
         label: Fixed label for all latents (0=healthy)
     """
 
@@ -101,16 +101,26 @@ class LatentDataset(Dataset):
         self.latent_dir = Path(latent_dir)
         self.label = label
 
-        self.latent_files = sorted([
-            f for f in self.latent_dir.iterdir()
-            if f.suffix == '.pt'
-        ])
+        consolidated_path = self.latent_dir / "all_latents.pt"
+        if consolidated_path.exists():
+            # Single-file loading: one torch.load, ~17MB, instant
+            self.latents = torch.load(consolidated_path, weights_only=True)
+        else:
+            # Fallback: load individual .pt files (slower)
+            latent_files = sorted([
+                f for f in self.latent_dir.iterdir()
+                if f.suffix == '.pt' and f.stem not in ('latent_stats', 'all_latents')
+            ])
+            if len(latent_files) == 0:
+                raise ValueError(f"No latent files found in {latent_dir}")
+            self.latents = torch.stack([
+                torch.load(f, weights_only=True) for f in latent_files
+            ])
 
-        if len(self.latent_files) == 0:
-            raise ValueError(f"No .pt files found in {latent_dir}")
+        self.labels = torch.full((len(self.latents),), label, dtype=torch.long)
 
     def __len__(self) -> int:
-        return len(self.latent_files)
+        return len(self.latents)
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
         """
@@ -118,8 +128,7 @@ class LatentDataset(Dataset):
             latent: Tensor of shape (C, H, W), typically (4, 32, 32)
             label: 0 for healthy
         """
-        latent = torch.load(self.latent_files[idx], weights_only=True)
-        return latent, self.label
+        return self.latents[idx], self.labels[idx]
 
 
 class CombinedTestDataset(Dataset):

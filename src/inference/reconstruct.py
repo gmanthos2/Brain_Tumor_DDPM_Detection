@@ -47,6 +47,7 @@ class AnomalyDetector:
         ddpm_config_path: str,
         vae_checkpoint_path: str,
         ddpm_checkpoint_path: str,
+        latent_stats_path: str = None,
         device: torch.device = None,
     ):
         self.device = device or get_device()
@@ -89,12 +90,27 @@ class AnomalyDetector:
 
         self.ddpm_config = ddpm_config
 
+        # Load latent normalization stats
+        if latent_stats_path is None:
+            latent_stats_path = str(project_root / "data" / "latents" / "latent_stats.pt")
+        stats = torch.load(latent_stats_path, map_location=self.device, weights_only=True)
+        self.latent_mean = stats["mean"].view(1, -1, 1, 1).to(self.device)
+        self.latent_std = stats["std"].view(1, -1, 1, 1).to(self.device)
+
         # Image preprocessing
         self.transform = transforms.Compose([
             transforms.Resize(256),
             transforms.ToTensor(),
             transforms.Normalize([0.5], [0.5]),
         ])
+
+    def normalize_latents(self, z_raw: torch.Tensor) -> torch.Tensor:
+        """Normalize raw VAE latents to ~N(0,1) for DDPM."""
+        return (z_raw - self.latent_mean) / self.latent_std
+
+    def denormalize_latents(self, z_norm: torch.Tensor) -> torch.Tensor:
+        """Denormalize DDPM latents back to raw VAE scale."""
+        return z_norm * self.latent_std + self.latent_mean
 
     @torch.no_grad()
     def detect(
@@ -126,10 +142,11 @@ class AnomalyDetector:
         img = Image.open(image_path).convert("L")
         x = self.transform(img).unsqueeze(0).to(self.device)  # (1, 1, 256, 256)
 
-        # Encode to latent space
-        z_0 = self.vae.encode_to_latent(x)
+        # Encode to latent space and normalize for DDPM
+        z_0_raw = self.vae.encode_to_latent(x)
+        z_0 = self.normalize_latents(z_0_raw)
 
-        # Partial noising
+        # Partial noising (in normalized space)
         t = torch.tensor([t_start], device=self.device)
         noise = torch.randn_like(z_0)
         z_t, _ = self.scheduler.q_sample(z_0, t, noise)
@@ -137,7 +154,7 @@ class AnomalyDetector:
         # Reconstruct conditioned on "healthy" (class 0)
         class_labels = torch.zeros(1, device=self.device, dtype=torch.long)
 
-        z_recon = self.diffusion.ddim_sample(
+        z_recon_norm = self.diffusion.ddim_sample(
             shape=z_0.shape,
             class_labels=class_labels,
             guidance_scale=guidance_scale,
@@ -147,7 +164,8 @@ class AnomalyDetector:
             t_start=t_start,
         )
 
-        # Decode back to image space
+        # Denormalize back to raw VAE scale and decode
+        z_recon = self.denormalize_latents(z_recon_norm)
         x_recon = self.vae.decode(z_recon)
 
         # Compute anomaly map

@@ -1,12 +1,17 @@
 """
 Precompute VAE latent representations for DDPM training.
 
-Encodes all training images through the trained VAE encoder and saves
-the latent tensors as .pt files. This avoids re-encoding during DDPM
-training, significantly speeding up iteration.
+Encodes all training images through the trained VAE encoder, computes
+dataset-wide normalization statistics, normalizes to ~N(0,1), and saves
+the latent tensors as .pt files.
+
+The normalization is critical: raw VAE latents have std≈7 which breaks
+the DDPM noise schedule (designed for unit-variance data). Normalizing
+to ~N(0,1) ensures the noise schedule properly corrupts the signal.
 """
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -32,7 +37,7 @@ def precompute_latents(
     batch_size: int = 8,
     num_workers: int = 4,
 ):
-    """Encode all images to latent space and save as .pt files."""
+    """Encode all images to latent space, normalize, and save as .pt files."""
     device = get_device()
 
     # Load VAE config and model
@@ -65,26 +70,65 @@ def precompute_latents(
 
     output_path = ensure_dir(output_dir)
     print(f"Encoding {len(dataset)} images to latent space...")
-    print(f"Output directory: {output_path}")
 
-    count = 0
+    # ── Pass 1: Encode all images, collect raw latents ──────────
+    all_latents = []
+    all_filenames = []
+
     with torch.no_grad():
         for images, labels, filenames in tqdm(loader, desc="Encoding"):
             images = images.to(device)
-
-            # Encode to latent mean (deterministic)
             latents = vae.encode_to_latent(images)
+            all_latents.append(latents.cpu())
+            all_filenames.extend(filenames)
 
-            # Save individual latent tensors
-            for i, (latent, filename) in enumerate(zip(latents, filenames)):
-                stem = Path(filename).stem
-                save_path = output_path / f"{stem}.pt"
-                torch.save(latent.cpu(), save_path)
-                count += 1
+    all_latents = torch.cat(all_latents, dim=0)
+    print(f"\nRaw latent statistics:")
+    print(f"  Shape: {all_latents.shape}")
+    print(f"  Mean:  {all_latents.mean():.4f}")
+    print(f"  Std:   {all_latents.std():.4f}")
+    print(f"  Range: [{all_latents.min():.3f}, {all_latents.max():.3f}]")
 
-    print(f"\n✓ Precomputed {count} latent tensors")
-    print(f"  Latent shape: {latents[0].shape}")
+    # ── Compute per-channel normalization stats ─────────────────
+    # Normalize to approximately N(0,1) so DDPM noise schedule works
+    latent_mean = all_latents.mean(dim=(0, 2, 3), keepdim=True)  # (1, C, 1, 1)
+    latent_std = all_latents.std(dim=(0, 2, 3), keepdim=True)    # (1, C, 1, 1)
+
+    print(f"\nPer-channel normalization:")
+    for c in range(latent_mean.shape[1]):
+        print(f"  Ch {c}: mean={latent_mean[0, c, 0, 0]:.4f}, std={latent_std[0, c, 0, 0]:.4f}")
+
+    # ── Normalize and save ──────────────────────────────────────
+    normalized_latents = (all_latents - latent_mean) / latent_std
+
+    print(f"\nNormalized latent statistics:")
+    print(f"  Mean:  {normalized_latents.mean():.4f}")
+    print(f"  Std:   {normalized_latents.std():.4f}")
+    print(f"  Range: [{normalized_latents.min():.3f}, {normalized_latents.max():.3f}]")
+
+    # Save ALL latents as a single consolidated file (fast loading, no per-file overhead)
+    consolidated_path = output_path / "all_latents.pt"
+    torch.save(normalized_latents, consolidated_path)
+    print(f"\n  Consolidated tensor saved: {consolidated_path} ({normalized_latents.nbytes / 1e6:.1f} MB)")
+
+    # Save normalization stats (needed for inference denormalization)
+    stats = {
+        "latent_mean": latent_mean.squeeze().tolist(),  # [C]
+        "latent_std": latent_std.squeeze().tolist(),     # [C]
+    }
+    stats_path = output_path / "latent_stats.json"
+    with open(stats_path, "w") as f:
+        json.dump(stats, f, indent=2)
+
+    # Also save as a tensor for easy loading
+    torch.save({
+        "mean": latent_mean.squeeze(),  # (C,)
+        "std": latent_std.squeeze(),    # (C,)
+    }, output_path / "latent_stats.pt")
+
+    print(f"\n✓ Precomputed {len(all_filenames)} normalized latent tensors")
     print(f"  Saved to: {output_path}")
+    print(f"  Stats saved to: {stats_path}")
 
 
 def main():

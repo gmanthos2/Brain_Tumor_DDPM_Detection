@@ -17,9 +17,10 @@ def set_seed(seed: int = 42):
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
-    # Deterministic operations (may slow down training slightly)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+    # Note: deterministic mode is NOT set here by default as it
+    # significantly slows training. Enable explicitly if needed.
+    # torch.backends.cudnn.deterministic = True
+    # torch.backends.cudnn.benchmark = False
 
 
 def get_device() -> torch.device:
@@ -89,9 +90,11 @@ def load_checkpoint(
 
 @torch.no_grad()
 def update_ema(ema_model: torch.nn.Module, model: torch.nn.Module, decay: float = 0.9999):
-    """Update exponential moving average model weights."""
+    """Update exponential moving average model weights using fused in-place lerp."""
     for ema_param, param in zip(ema_model.parameters(), model.parameters()):
-        ema_param.data.mul_(decay).add_(param.data, alpha=1 - decay)
+        ema_param.data.lerp_(param.data, 1.0 - decay)
+    for ema_buf, buf in zip(ema_model.buffers(), model.buffers()):
+        ema_buf.data.copy_(buf.data)
 
 
 def ensure_dir(path: str | Path) -> Path:
