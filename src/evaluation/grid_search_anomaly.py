@@ -21,7 +21,16 @@ def main():
     parser.add_argument("--vae-config", type=str, default="configs/vae_config.yaml")
     parser.add_argument("--ddpm-config", type=str, default="configs/ddpm_config.yaml")
     parser.add_argument("--vae-checkpoint", type=str, default="checkpoints/vae/best.pt")
-    parser.add_argument("--ddpm-checkpoint", type=str, default="checkpoints/ddpm/step_130000.pt")
+    
+    # Accept multiple checkpoints
+    parser.add_argument("--ddpm-checkpoints", type=str, nargs="+", default=[
+        "checkpoints/ddpm/step_100000.pt",
+        "checkpoints/ddpm/step_110000.pt",
+        "checkpoints/ddpm/step_120000.pt",
+        "checkpoints/ddpm/step_130000.pt",
+        "checkpoints/ddpm/step_140000.pt",
+    ])
+    
     parser.add_argument("--t-starts", type=int, nargs="+", default=[150, 250, 300, 400])
     parser.add_argument("--guidance-scales", type=float, nargs="+", default=[3.0, 5.0, 7.5])
     parser.add_argument("--ddim-steps", type=int, default=50)
@@ -29,23 +38,35 @@ def main():
 
     output_dir = ensure_dir(project_root / args.output)
     
-    print("Loading models...")
-    detector = AnomalyDetector(
-        vae_config_path=str(project_root / args.vae_config),
-        ddpm_config_path=str(project_root / args.ddpm_config),
-        vae_checkpoint_path=str(project_root / args.vae_checkpoint),
-        ddpm_checkpoint_path=str(project_root / args.ddpm_checkpoint),
-    )
-
     results_list = []
     
-    combinations = list(itertools.product(args.t_starts, args.guidance_scales))
+    combinations = list(itertools.product(args.ddpm_checkpoints, args.t_starts, args.guidance_scales))
     print(f"Starting grid search over {len(combinations)} combinations...")
     
-    for t_start, guidance_scale in combinations:
+    # Keep track of the currently loaded checkpoint to avoid reloading if it hasn't changed
+    current_ckpt = None
+    detector = None
+
+    for ckpt_path, t_start, guidance_scale in combinations:
         print(f"\n========================================")
-        print(f"Testing t_start={t_start}, guidance_scale={guidance_scale}")
+        print(f"Testing Checkpoint: {Path(ckpt_path).name}")
+        print(f"Testing t_start: {t_start}, guidance_scale: {guidance_scale}")
         print(f"========================================")
+        
+        # Reload model only if checkpoint changes
+        if current_ckpt != ckpt_path:
+            print(f"Loading DDPM checkpoint: {ckpt_path} ...")
+            try:
+                detector = AnomalyDetector(
+                    vae_config_path=str(project_root / args.vae_config),
+                    ddpm_config_path=str(project_root / args.ddpm_config),
+                    vae_checkpoint_path=str(project_root / args.vae_checkpoint),
+                    ddpm_checkpoint_path=str(project_root / ckpt_path),
+                )
+                current_ckpt = ckpt_path
+            except Exception as e:
+                print(f"Failed to load checkpoint {ckpt_path}: {e}")
+                continue
         
         try:
             results = evaluate_anomaly_detection(
@@ -61,6 +82,7 @@ def main():
             
             # Record results
             row = {
+                "checkpoint": Path(ckpt_path).name,
                 "t_start": t_start,
                 "guidance_scale": guidance_scale,
                 "auroc": metrics["auroc"],
@@ -74,8 +96,14 @@ def main():
             }
             results_list.append(row)
             
+            # Save incrementally so we don't lose progress if interrupted
+            df = pd.DataFrame(results_list)
+            df = df.sort_values(by="auroc", ascending=False)
+            csv_path = output_dir / "grid_search_results_incremental.csv"
+            df.to_csv(csv_path, index=False)
+            
         except Exception as e:
-            print(f"Failed configuration t_start={t_start}, guidance={guidance_scale}: {e}")
+            print(f"Failed configuration {Path(ckpt_path).name}, t_start={t_start}, guidance={guidance_scale}: {e}")
             continue
 
     if results_list:
@@ -86,11 +114,15 @@ def main():
         csv_path = output_dir / "grid_search_results.csv"
         df.to_csv(csv_path, index=False)
         
+        # Clean up incremental file if finished completely
+        if (output_dir / "grid_search_results_incremental.csv").exists():
+            (output_dir / "grid_search_results_incremental.csv").unlink()
+        
         print("\n" + "=" * 50)
         print("GRID SEARCH COMPLETED")
         print("=" * 50)
-        print(f"Top 3 Configurations (by AUROC):")
-        print(df[["t_start", "guidance_scale", "auroc", "f1_score", "sensitivity"]].head(3).to_string(index=False))
+        print(f"Top 5 Configurations (by AUROC):")
+        print(df[["checkpoint", "t_start", "guidance_scale", "auroc", "f1_score", "sensitivity"]].head(5).to_string(index=False))
         print(f"\nFull results saved to: {csv_path}")
     else:
         print("No configurations succeeded.")
