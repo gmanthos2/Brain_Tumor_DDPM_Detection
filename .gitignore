@@ -38,3 +38,5 @@ wandb/
 # Misc
 *.log
 *.tar.gz
+progress_report.md
+handover.md

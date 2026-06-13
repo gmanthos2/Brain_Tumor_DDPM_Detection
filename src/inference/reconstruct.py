@@ -170,21 +170,30 @@ class AnomalyDetector:
 
         # Compute anomaly map
         diff = torch.abs(x - x_recon)
-        anomaly_map = diff.squeeze().cpu().numpy()
+        anomaly_map_raw = diff.squeeze().cpu().numpy()
 
         # Gaussian smoothing
         if gaussian_sigma > 0:
-            anomaly_map = gaussian_filter(anomaly_map, sigma=gaussian_sigma)
+            anomaly_map_raw = gaussian_filter(anomaly_map_raw, sigma=gaussian_sigma)
 
-        # Normalize to [0, 1]
-        if anomaly_map.max() > anomaly_map.min():
-            anomaly_map = (anomaly_map - anomaly_map.min()) / (anomaly_map.max() - anomaly_map.min())
+        # Compute anomaly score from RAW error (before normalization)
+        # Using mean L1 preserves magnitude differences between healthy/anomalous
+        anomaly_score = float(anomaly_map_raw.mean())
+
+        # Normalize to [0, 1] for visualization only
+        if anomaly_map_raw.max() > anomaly_map_raw.min():
+            anomaly_map_vis = (anomaly_map_raw - anomaly_map_raw.min()) / (
+                anomaly_map_raw.max() - anomaly_map_raw.min()
+            )
+        else:
+            anomaly_map_vis = anomaly_map_raw
 
         return {
             "original": x.squeeze().cpu(),
             "reconstruction": x_recon.squeeze().cpu(),
-            "anomaly_map": anomaly_map,
-            "anomaly_score": float(anomaly_map.max()),
+            "anomaly_map": anomaly_map_vis,
+            "anomaly_map_raw": anomaly_map_raw,
+            "anomaly_score": anomaly_score,
         }
 
     @torch.no_grad()

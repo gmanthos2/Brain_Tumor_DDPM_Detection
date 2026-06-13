@@ -28,22 +28,38 @@ def load_images_as_tensors(image_dir, image_size=256, max_images=None):
     return torch.stack(images)
 
 
-def compute_ssim_batch(real, fake):
+def compute_ssim_batch(real, fake, num_pairs=200):
+    """Compute SSIM between randomly sampled real-fake pairs (distribution-level)."""
     from skimage.metrics import structural_similarity as ssim
-    n = min(len(real), len(fake))
-    scores = [ssim(((real[i].squeeze().numpy()+1)/2), ((fake[i].squeeze().numpy()+1)/2), data_range=1.0) for i in range(n)]
+    n_real, n_fake = len(real), len(fake)
+    real_idx = np.random.choice(n_real, size=num_pairs, replace=True)
+    fake_idx = np.random.choice(n_fake, size=num_pairs, replace=True)
+    scores = [
+        ssim(
+            ((real[ri].squeeze().numpy() + 1) / 2),
+            ((fake[fi].squeeze().numpy() + 1) / 2),
+            data_range=1.0,
+        )
+        for ri, fi in zip(real_idx, fake_idx)
+    ]
     return {"ssim_mean": float(np.mean(scores)), "ssim_std": float(np.std(scores))}
 
 
-def compute_lpips_score(real, fake, device="cuda"):
+def compute_lpips_score(real, fake, device="cuda", num_pairs=200):
+    """Compute LPIPS between randomly sampled real-fake pairs (distribution-level)."""
     import lpips
     model = lpips.LPIPS(net="vgg").to(device)
-    n = min(len(real), len(fake))
+    n_real, n_fake = len(real), len(fake)
+    real_idx = np.random.choice(n_real, size=num_pairs, replace=True)
+    fake_idx = np.random.choice(n_fake, size=num_pairs, replace=True)
     scores = []
     with torch.no_grad():
-        for i in range(0, n, 16):
-            s = model(real[i:i+16].repeat(1,3,1,1).to(device), fake[i:i+16].repeat(1,3,1,1).to(device))
-            scores.extend(s.squeeze().cpu().numpy().tolist() if s.dim()>0 else [s.item()])
+        for ri, fi in zip(real_idx, fake_idx):
+            s = model(
+                real[ri:ri+1].repeat(1, 3, 1, 1).to(device),
+                fake[fi:fi+1].repeat(1, 3, 1, 1).to(device),
+            )
+            scores.append(s.item())
     return {"lpips_mean": float(np.mean(scores)), "lpips_std": float(np.std(scores))}
 
 

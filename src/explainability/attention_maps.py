@@ -8,12 +8,10 @@ import sys
 from pathlib import Path
 import torch
 import torch.nn as nn
-import numpy as np
-import matplotlib.pyplot as plt
-matplotlib.use = lambda x: None
 import matplotlib
 matplotlib.use("Agg")
-
+import matplotlib.pyplot as plt
+import numpy as np
 project_root = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(project_root))
 from src.utils.helpers import ensure_dir
@@ -116,3 +114,47 @@ def visualize_attention(
     plt.tight_layout()
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close()
+
+def main():
+    import argparse
+    from src.inference.reconstruct import AnomalyDetector
+    
+    parser = argparse.ArgumentParser(description="Extract U-Net Attention Maps")
+    parser.add_argument("--image", type=str, default="data/processed/test/anomalous/y0.png", help="Image to analyze")
+    parser.add_argument("--output", type=str, default="results/explainability/attention_maps.png")
+    parser.add_argument("--vae-config", type=str, default="configs/vae_config.yaml")
+    parser.add_argument("--ddpm-config", type=str, default="configs/ddpm_config.yaml")
+    parser.add_argument("--vae-checkpoint", type=str, default="checkpoints/vae/best.pt")
+    parser.add_argument("--ddpm-checkpoint", type=str, default="checkpoints/ddpm/step_130000.pt")
+    args = parser.parse_args()
+    
+    output_path = project_root / args.output
+    ensure_dir(output_path.parent)
+    
+    print("Loading models...")
+    detector = AnomalyDetector(
+        vae_config_path=str(project_root / args.vae_config),
+        ddpm_config_path=str(project_root / args.ddpm_config),
+        vae_checkpoint_path=str(project_root / args.vae_checkpoint),
+        ddpm_checkpoint_path=str(project_root / args.ddpm_checkpoint)
+    )
+    
+    print("Registering attention hooks on U-Net...")
+    extractor = AttentionExtractor(detector.diffusion.model)
+    extractor.register_hooks()
+    
+    print(f"Running detection on {args.image}...")
+    result = detector.detect(str(project_root / args.image))
+    
+    print("Visualizing attention maps...")
+    visualize_attention(
+        attention_data=extractor.attention_maps,
+        original_image=result["original"].numpy(),
+        output_path=str(output_path)
+    )
+    
+    extractor.remove_hooks()
+    print(f"Saved attention maps to {output_path}")
+
+if __name__ == "__main__":
+    main()
