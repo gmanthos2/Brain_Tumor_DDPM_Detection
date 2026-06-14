@@ -24,30 +24,48 @@ def main():
     
     # Accept multiple checkpoints
     parser.add_argument("--ddpm-checkpoints", type=str, nargs="+", default=[
-        "checkpoints/ddpm/step_100000.pt",
-        "checkpoints/ddpm/step_110000.pt",
-        "checkpoints/ddpm/step_120000.pt",
-        "checkpoints/ddpm/step_130000.pt",
-        "checkpoints/ddpm/step_140000.pt",
+        "checkpoints/ddpm/step_50000.pt",
+        "checkpoints/ddpm/step_60000.pt",
+        "checkpoints/ddpm/step_70000.pt",
+        "checkpoints/ddpm/step_80000.pt",
+        "checkpoints/ddpm/step_90000.pt",
     ])
     
-    parser.add_argument("--t-starts", type=int, nargs="+", default=[150, 250, 300, 400])
+    parser.add_argument("--t-starts", type=int, nargs="+", default=[50, 100, 150, 200])
     parser.add_argument("--guidance-scales", type=float, nargs="+", default=[3.0, 5.0, 7.5])
     parser.add_argument("--ddim-steps", type=int, default=50)
     args = parser.parse_args()
 
     output_dir = ensure_dir(project_root / args.output)
+    csv_path = output_dir / "grid_search_results.csv"
     
     results_list = []
+    evaluated_combinations = set()
+
+    if csv_path.exists():
+        print(f"Loading existing results from {csv_path}")
+        df_existing = pd.read_csv(csv_path)
+        results_list = df_existing.to_dict('records')
+        for row in results_list:
+            evaluated_combinations.add((row['checkpoint'], row['t_start'], row['guidance_scale']))
     
     combinations = list(itertools.product(args.ddpm_checkpoints, args.t_starts, args.guidance_scales))
-    print(f"Starting grid search over {len(combinations)} combinations...")
+    
+    # Filter combinations that haven't been evaluated
+    combinations_to_run = [
+        c for c in combinations 
+        if (Path(c[0]).name, c[1], c[2]) not in evaluated_combinations
+    ]
+    
+    print(f"Total combinations requested: {len(combinations)}")
+    print(f"Combinations already evaluated: {len(combinations) - len(combinations_to_run)}")
+    print(f"Starting grid search over {len(combinations_to_run)} NEW combinations...")
     
     # Keep track of the currently loaded checkpoint to avoid reloading if it hasn't changed
     current_ckpt = None
     detector = None
 
-    for ckpt_path, t_start, guidance_scale in combinations:
+    for ckpt_path, t_start, guidance_scale in combinations_to_run:
         print(f"\n========================================")
         print(f"Testing Checkpoint: {Path(ckpt_path).name}")
         print(f"Testing t_start: {t_start}, guidance_scale: {guidance_scale}")
