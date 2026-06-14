@@ -1,0 +1,69 @@
+% ============================================================
+% 4. EXPERIMENTAL SETUP
+% ============================================================
+\section{Experimental Setup}
+\label{sec:experiments}
+
+\subsection{Dataset}
+\label{sec:dataset}
+
+We use the Brain Tumor Detection dataset~\cite{bhuvaji2020brain}, a publicly available collection of 2D brain MRI slices from Kaggle. The dataset comprises approximately 1,500 healthy and 1,500 anomalous (tumor-bearing) JPEG images of varying original dimensions. Ground truth tumor annotations are provided as VIA polygon masks in JSON format for a subset of anomalous images.
+
+All images are preprocessed to $256 \times 256$ grayscale PNG format and normalized to the range $[-1, 1]$. The dataset is split into training (70\%), validation (15\%), and test (15\%) partitions. The test set contains 225 healthy and 450 anomalous images. Importantly, the DDPM is trained \textit{exclusively} on healthy images (via their precomputed latent representations), following the unsupervised anomaly detection paradigm.
+
+\subsection{Implementation Details}
+\label{sec:implementation}
+
+The pipeline is implemented in PyTorch 2.12 with the MONAI framework~\cite{monai2022} for the VAE component. All experiments are conducted on a single NVIDIA RTX 4060 GPU with 8~GB VRAM. To accommodate the memory constraints, we employ several optimizations:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Gradient checkpointing} in the U-Net to trade computation for memory during training.
+  \item \textbf{Automatic Mixed Precision (AMP)} for both VAE and DDPM training.
+  \item \textbf{Zero DataLoader workers} (\texttt{num\_workers=0}) to avoid memory duplication, as precomputed latents are already loaded into RAM.
+  \item \textbf{Consolidated latent storage}: all training latents are stored in a single tensor file ($\sim$17~MB) rather than individual files, eliminating file handle overhead.
+\end{itemize}
+
+Table~\ref{tab:hyperparameters} summarizes the key hyperparameters for both training stages.
+
+\begin{table}[H]
+\centering
+\caption{Training hyperparameters for the two-stage pipeline.}
+\label{tab:hyperparameters}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Parameter} & \textbf{VAE (Stage 1)} & \textbf{DDPM (Stage 2)} \\
+\midrule
+Input resolution    & $256 \times 256 \times 1$ & $32 \times 32 \times 4$ \\
+Channels            & $[64, 128, 256, 256]$ & $[128, 256, 512, 512]$ \\
+Residual blocks     & 2 per level & 2 per level \\
+Attention           & Levels 3--4 & Res.\ $16 \times 16$, $8 \times 8$ \\
+Optimizer           & AdamW & AdamW \\
+Learning rate       & $1 \times 10^{-4}$ & $2 \times 10^{-4}$ \\
+Weight decay        & 0.01 & 0.01 \\
+Batch size          & 4 (eff.\ 32) & 32 \\
+Training duration   & 150 epochs & 200K steps \\
+EMA decay           & 0.999 & 0.9999 \\
+Gradient clipping   & 1.0 & 1.0 \\
+Mixed precision     & \checkmark & \checkmark \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Evaluation Metrics}
+\label{sec:metrics}
+
+\paragraph{Anomaly Detection.} We evaluate anomaly detection at two levels:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Image-level}: Each image receives a scalar anomaly score (mean raw L1 reconstruction error). We report the Area Under the Receiver Operating Characteristic curve (AUROC), Area Under the Precision--Recall Curve (AUPRC), F1-score at the optimal threshold, sensitivity (true positive rate), and specificity (true negative rate).
+  \item \textbf{Pixel-level}: Using ground truth polygon masks, we compute pixel-level AUROC by treating each pixel's anomaly map value as a prediction and the binary mask as ground truth.
+\end{itemize}
+
+\paragraph{Synthetic Image Quality.} We assess generation quality using four complementary metrics:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Fr\'{e}chet Inception Distance (FID)}~\cite{heusel2017gans}: measures the distributional distance between real and generated image feature distributions.
+  \item \textbf{Structural Similarity Index (SSIM)}~\cite{wang2004image}: quantifies structural similarity between randomly paired real and synthetic images.
+  \item \textbf{Learned Perceptual Image Patch Similarity (LPIPS)}~\cite{zhang2018perceptual}: measures perceptual distance using deep features.
+  \item \textbf{Intra-set Diversity}: LPIPS computed between pairs of generated images, measuring the diversity of synthetic outputs.
+\end{itemize}
+
+Note that SSIM and LPIPS are computed as distribution-level statistics over 200 randomly sampled cross-distribution pairs, rather than paired comparisons, since synthetic images are not reconstructions of specific real images.

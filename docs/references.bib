@@ -1,7 +1,11 @@
+% ============================================================
+% Foundational Diffusion Models
+% ============================================================
+
 @article{ho2020denoising,
   title={Denoising diffusion probabilistic models},
   author={Ho, Jonathan and Jain, Ajay and Abbeel, Pieter},
-  journal={Advances in neural information processing systems},
+  journal={Advances in Neural Information Processing Systems},
   volume={33},
   pages={6840--6851},
   year={2020}
@@ -17,7 +21,7 @@
 @inproceedings{rombach2022high,
   title={High-resolution image synthesis with latent diffusion models},
   author={Rombach, Robin and Blattmann, Andreas and Lorenz, Dominik and Esser, Patrick and Ommer, Bj{\"o}rn},
-  booktitle={Proceedings of the IEEE/CVF conference on computer vision and pattern recognition},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
   pages={10684--10695},
   year={2022}
 }
@@ -29,34 +33,259 @@
   year={2022}
 }
 
+@inproceedings{nichol2021improved,
+  title={Improved denoising diffusion probabilistic models},
+  author={Nichol, Alexander Quinn and Dhariwal, Prafulla},
+  booktitle={International Conference on Machine Learning},
+  pages={8162--8171},
+  year={2021},
+  organization={PMLR}
+}
+
+@inproceedings{dhariwal2021diffusion,
+  title={Diffusion models beat {GANs} on image synthesis},
+  author={Dhariwal, Prafulla and Nichol, Alexander},
+  booktitle={Advances in Neural Information Processing Systems},
+  volume={34},
+  pages={8780--8794},
+  year={2021}
+}
+
+% ============================================================
+% Medical Image Generation & Brain Imaging
+% ============================================================
+
 @inproceedings{pinaya2022brain,
   title={Brain imaging generation with latent diffusion models},
-  author={Pinaya, Walter HL and others},
+  author={Pinaya, Walter HL and Tudosiu, Petru-Daniel and Dafflon, Jessica and Da Costa, Pedro F and Fernandez, Virginia and others},
   booktitle={MICCAI Workshop on Deep Generative Models},
+  pages={117--126},
+  year={2022},
+  publisher={Springer}
+}
+
+@article{pinaya2023generative,
+  title={Generative {AI} for medical imaging: extending the {MONAI} framework},
+  author={Pinaya, Walter HL and Graham, Mark S and Kerfoot, Eric and Tudosiu, Petru-Daniel and Dafflon, Jessica and others},
+  journal={arXiv preprint arXiv:2307.15208},
+  year={2023}
+}
+
+@inproceedings{dorjsembe2022three,
+  title={Three-dimensional medical image synthesis with denoising diffusion probabilistic models},
+  author={Dorjsembe, Zolnamar and Pao, Hsing-Kuo and Sendo, Sodtavilan and Fang, Choijil},
+  booktitle={Medical Imaging with Deep Learning},
   year={2022}
 }
+
+% ============================================================
+% Anomaly Detection in Medical Imaging
+% ============================================================
 
 @article{wyatt2022anoddpm,
-  title={AnoDDPM: Anomaly detection with denoising diffusion probabilistic models using simplex noise},
-  author={Wyatt, Julian and Leach, Adam and Sheridan, Sebastian M and others},
-  journal={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops},
+  title={{AnoDDPM}: Anomaly detection with denoising diffusion probabilistic models using simplex noise},
+  author={Wyatt, Julian and Leach, Adam and Sheridan, Sebastian M and Mayol-Cuevas, Walterio W},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops},
+  pages={650--656},
   year={2022}
 }
 
+@article{wolleb2022diffusion,
+  title={Diffusion models for medical anomaly detection},
+  author={Wolleb, Julia and Sandk{\"u}hler, Robin and Bieder, Florentin and Valmaggia, Philippe and Cattin, Philippe C},
+  booktitle={International Conference on Medical Image Computing and Computer-Assisted Intervention},
+  pages={35--45},
+  year={2022},
+  publisher={Springer}
+}
+
+@article{behrendt2024patched,
+  title={Patched diffusion models for unsupervised anomaly detection in brain {MRI}},
+  author={Behrendt, Finn and Bhatt, Debayan and Kr{\"u}ger, Julia and Opfer, Roland and Schlaefer, Alexander},
+  journal={Medical Image Analysis},
+  volume={93},
+  pages={103069},
+  year={2024},
+  publisher={Elsevier}
+}
+
+@article{sanchez2022healthy,
+  title={What is healthy? Generative counterfactual diffusion for lesion localization},
+  author={Sanchez, Pedro and Kascenas, Antanas and Liu, Xiao and O'Neil, Alison Q and Tsaftaris, Sotirios A},
+  booktitle={MICCAI Workshop on Deep Generative Models},
+  pages={31--41},
+  year={2022},
+  publisher={Springer}
+}
+
+@article{schlegl2019f,
+  title={f-{AnoGAN}: Fast unsupervised anomaly detection with generative adversarial networks},
+  author={Schlegl, Thomas and Seeb{\"o}ck, Philipp and Waldstein, Sebastian M and Langs, Georg and Schmidt-Erfurth, Ursula},
+  journal={Medical Image Analysis},
+  volume={54},
+  pages={30--44},
+  year={2019},
+  publisher={Elsevier}
+}
+
+@article{baur2021autoencoders,
+  title={Autoencoders for unsupervised anomaly segmentation in brain {MR} images: A comparative study},
+  author={Baur, Christoph and Denner, Stefan and Wiestler, Benedikt and Navab, Nassir and Albarqouni, Shadi},
+  journal={Medical Image Analysis},
+  volume={69},
+  pages={101952},
+  year={2021},
+  publisher={Elsevier}
+}
+
+% ============================================================
+% VAE and Autoencoders
+% ============================================================
+
+@article{kingma2014auto,
+  title={Auto-encoding variational {Bayes}},
+  author={Kingma, Diederik P and Welling, Max},
+  journal={arXiv preprint arXiv:1312.6114},
+  year={2014}
+}
+
+@article{monai2022,
+  title={{MONAI}: An open-source framework for deep learning in healthcare},
+  author={{MONAI Consortium}},
+  journal={arXiv preprint arXiv:2211.02701},
+  year={2022}
+}
+
+% ============================================================
+% Evaluation Metrics
+% ============================================================
+
+@article{heusel2017gans,
+  title={{GANs} trained by a two time-scale update rule converge to a local {Nash} equilibrium},
+  author={Heusel, Martin and Ramsauer, Hubert and Unterthiner, Thomas and Nessler, Bernhard and Hochreiter, Sepp},
+  journal={Advances in Neural Information Processing Systems},
+  volume={30},
+  year={2017}
+}
+
+@article{wang2004image,
+  title={Image quality assessment: from error visibility to structural similarity},
+  author={Wang, Zhou and Bovik, Alan C and Sheikh, Hamid R and Simoncelli, Eero P},
+  journal={IEEE Transactions on Image Processing},
+  volume={13},
+  number={4},
+  pages={600--612},
+  year={2004},
+  publisher={IEEE}
+}
+
+@inproceedings{zhang2018perceptual,
+  title={The unreasonable effectiveness of deep features as a perceptual metric},
+  author={Zhang, Richard and Isola, Phillip and Efros, Alexei A and Shechtman, Eli and Wang, Oliver},
+  booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
+  pages={586--595},
+  year={2018}
+}
+
+% ============================================================
+% Explainability
+% ============================================================
+
 @article{selvaraju2017grad,
-  title={Grad-CAM: Visual explanations from deep networks via gradient-based localization},
+  title={Grad-{CAM}: Visual explanations from deep networks via gradient-based localization},
   author={Selvaraju, Ramprasaath R and Cogswell, Michael and Das, Abhishek and Vedantam, Ramakrishna and Parikh, Devi and Batra, Dhruv},
-  journal={International journal of computer vision},
+  journal={International Journal of Computer Vision},
   volume={128},
   number={2},
   pages={336--359},
-  year={2020}
+  year={2020},
+  publisher={Springer}
 }
 
-@article{heusel2017gans,
-  title={GANs trained by a two time-scale update rule converge to a local Nash equilibrium},
-  author={Heusel, Martin and Ramsauer, Hubert and Unterthiner, Thomas and Nessler, Bernhard and Hochreiter, Sepp},
-  journal={Advances in neural information processing systems},
+@article{vaswani2017attention,
+  title={Attention is all you need},
+  author={Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and Uszkoreit, Jakob and Jones, Llion and Gomez, Aidan N and Kaiser, {\L}ukasz and Polosukhin, Illia},
+  journal={Advances in Neural Information Processing Systems},
   volume={30},
   year={2017}
+}
+
+% ============================================================
+% Ethics & Data Privacy
+% ============================================================
+
+@inproceedings{akbar2023beware,
+  title={Beware of diffusion models for synthesizing medical images -- A comparison with {GANs} in terms of memorizing training data},
+  author={Akbar, Muhammad Usman and Wang, Wuhao and Eklund, Anders},
+  booktitle={Medical Imaging with Deep Learning},
+  year={2023}
+}
+
+@article{dar2024investigating,
+  title={Investigating data memorization in 3D latent diffusion models for medical image synthesis},
+  author={Dar, Salman UH and Ye, Yuxin and Eidex, Zachary and Peng, Luke and Breen, Richard and others},
+  journal={arXiv preprint arXiv:2307.01148},
+  year={2024}
+}
+
+% ============================================================
+% U-Net Architecture
+% ============================================================
+
+@inproceedings{ronneberger2015u,
+  title={U-{Net}: Convolutional networks for biomedical image segmentation},
+  author={Ronneberger, Olaf and Fischer, Philipp and Brox, Thomas},
+  booktitle={International Conference on Medical Image Computing and Computer-Assisted Intervention},
+  pages={234--241},
+  year={2015},
+  publisher={Springer}
+}
+
+% ============================================================
+% EMA
+% ============================================================
+
+@article{polyak1992acceleration,
+  title={Acceleration of stochastic approximation by averaging},
+  author={Polyak, Boris T and Juditsky, Anatoli B},
+  journal={SIAM Journal on Control and Optimization},
+  volume={30},
+  number={4},
+  pages={838--855},
+  year={1992},
+  publisher={SIAM}
+}
+
+% ============================================================
+% Datasets
+% ============================================================
+
+@misc{bhuvaji2020brain,
+  title={Brain Tumor Detection},
+  author={Bhuvaji, Sagar and Kadam, Ankita and Bhumkar, Prajakta and Dedge, Sameer and Kanchan, Swati},
+  howpublished={Kaggle},
+  year={2020},
+  note={\url{https://www.kaggle.com/datasets/ahmedhamada0/brain-tumor-detection}}
+}
+
+% ============================================================
+% GAN-based Medical Imaging
+% ============================================================
+
+@article{goodfellow2014generative,
+  title={Generative adversarial nets},
+  author={Goodfellow, Ian and Pouget-Abadie, Jean and Mirza, Mehdi and Xu, Bing and Warde-Farley, David and Ozair, Sherjil and Courville, Aaron and Bengio, Yoshua},
+  journal={Advances in Neural Information Processing Systems},
+  volume={27},
+  year={2014}
+}
+
+@article{yi2019generative,
+  title={Generative adversarial network in medical imaging: A review},
+  author={Yi, Xin and Walia, Ekta and Babyn, Paul},
+  journal={Medical Image Analysis},
+  volume={58},
+  pages={101552},
+  year={2019},
+  publisher={Elsevier}
 }

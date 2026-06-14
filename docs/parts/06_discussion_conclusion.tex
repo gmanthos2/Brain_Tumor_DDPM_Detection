@@ -1,0 +1,71 @@
+% ============================================================
+% 6. DISCUSSION
+% ============================================================
+\section{Discussion}
+\label{sec:discussion}
+
+\paragraph{Anomaly Detection Mechanism.} Our results demonstrate that latent diffusion models can effectively detect brain tumors through reconstruction-based anomaly scoring, without requiring any anomaly labels during training. The core mechanism relies on the model's inability to faithfully reconstruct pathological regions when conditioned on the healthy class: since the DDPM has only learned the distribution of healthy brain anatomy, it ``corrects'' anomalous regions during healthy-conditioned reconstruction, producing measurable reconstruction error in tumor areas.
+
+\paragraph{Critical Role of $t_{\text{start}}$.} The hyperparameter ablation study reveals that the noise injection level $t_{\text{start}}$ is the most influential factor in anomaly detection performance. This parameter controls a fundamental trade-off: sufficient noise must be injected to destroy the anomaly signal in the latent representation, but excessive noise also destroys healthy anatomical features, causing the model to hallucinate new anatomy during reconstruction and generating false positive errors. Our optimal value of $t_{\text{start}} = 150$ (out of $T = 1000$) corresponds to a moderate noise level that balances these competing objectives. This finding aligns with observations in AnoDDPM~\cite{wyatt2022anoddpm} and other reconstruction-based methods.
+
+\paragraph{Guidance Scale as a Clinical Tuning Knob.} The guidance scale $w$ provides a clinically useful sensitivity--specificity trade-off with minimal impact on overall AUROC. At $w = 3.0$, the model achieves 88\% sensitivity (detecting the vast majority of tumors) at the cost of more false positives. At $w = 7.5$, the model is more conservative, with balanced sensitivity and specificity. This tunable behavior could be valuable in clinical deployment, where the cost asymmetry between missed tumors and false alarms varies across applications (screening vs.\ diagnostic confirmation).
+
+\paragraph{Generation Quality Context.} The FID of 144.43, while moderate compared to natural image benchmarks, should be interpreted in context. Our model is trained on approximately 1,500 single-channel grayscale images---a small dataset by generative modeling standards. The FID metric itself is calibrated for RGB natural images and may not accurately capture medical image quality. The intra-set diversity score (LPIPS = 0.404) confirms meaningful sample variety, and qualitative inspection shows anatomically plausible brain MRI generations.
+
+\paragraph{Comparison with Related Methods.} Direct comparison with existing methods is challenging due to differences in datasets, preprocessing, and evaluation protocols. However, our image-level AUROC of 0.756 falls within the range reported by comparable methods: AnoDDPM~\cite{wyatt2022anoddpm} achieves AUROCs of 0.70--0.83 depending on the anomaly type and noise configuration, while Wolleb et al.~\cite{wolleb2022diffusion} report 0.74--0.86 on brain tumor datasets. Our pixel-level AUROC of 0.894 is competitive, demonstrating strong localization despite operating at a coarse latent resolution ($32 \times 32$) that is upsampled to $256 \times 256$ by the VAE decoder.
+
+\paragraph{Limitations.} Several limitations should be acknowledged:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{2D processing}: Our model operates on individual 2D slices, ignoring volumetric context that could improve detection of spatially coherent pathologies.
+  \item \textbf{Limited dataset}: The Brain Tumor Detection dataset contains approximately 3,000 images from a single source, limiting the diversity of brain anatomy and imaging conditions represented.
+  \item \textbf{No demographic metadata}: The dataset provides no patient demographics, precluding analysis of potential performance disparities across populations.
+  \item \textbf{Resolution bottleneck}: The $8\times$ spatial compression by the VAE limits the finest anomaly localization resolution to approximately $8 \times 8$ pixel patches in the original image space.
+  \item \textbf{No clinical validation}: All evaluations are performed on benchmark data; clinical deployment would require prospective validation with radiologist assessment.
+\end{itemize}
+
+% ============================================================
+% 7. ETHICAL CONSIDERATIONS
+% ============================================================
+\section{Ethical Considerations}
+\label{sec:ethics}
+
+The deployment of generative AI models in medical imaging raises important ethical concerns that must be addressed alongside technical contributions.
+
+\paragraph{Data Privacy and Memorization.} Diffusion models trained on small datasets face an elevated risk of memorizing individual training examples~\cite{akbar2023beware, dar2024investigating}. With approximately 1,500 healthy training images, our model could potentially reproduce identifiable patient scans during generation. Mitigations include monitoring for near-duplicate generations via perceptual similarity against the training set and, for clinical deployment, incorporating differential privacy during training.
+
+\paragraph{Dataset Bias and Fairness.} The Brain Tumor Detection dataset lacks demographic metadata (age, sex, ethnicity, scanner type), making it impossible to assess whether the model performs equitably across patient populations. A model trained on a non-representative distribution may flag normal anatomical variants in underrepresented groups as anomalies, potentially introducing systematic bias in clinical screening.
+
+\paragraph{Safe Use of Synthetic Data.} Synthetic brain MRIs generated by this model must not be used as substitutes for real diagnostic images. Risks include hallucinated pseudo-pathology that could mislead downstream classifiers, and the absence of genuine pathological features in healthy-conditioned generations. All synthetic images should carry clear provenance metadata including generation parameters and a ``SYNTHETIC'' label.
+
+\paragraph{Regulatory Considerations.} Medical AI systems are classified as high-risk under the EU AI Act and require compliance with evolving FDA guidance on AI/ML-based Software as a Medical Device (SaMD). Any downstream clinical application of this pipeline would require prospective validation on independent clinical data, IRB approval, and regulatory clearance.
+
+\paragraph{Disclaimer.} This work is a research prototype and is \textbf{not suitable for clinical diagnosis}. The model has not been validated in a clinical setting, and performance metrics are computed on a limited benchmark dataset.
+
+% ============================================================
+% 8. CONCLUSION
+% ============================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have presented a two-stage latent diffusion pipeline for brain MRI anomaly detection and synthetic image generation. The system combines a MONAI-based VAE for perceptual compression with a class-conditional U-Net DDPM operating in the normalized latent space, using DDIM sampling and Classifier-Free Guidance for efficient inference.
+
+Our systematic evaluation demonstrates that the pipeline achieves an image-level AUROC of 0.756 and a pixel-level AUROC of 0.894 for tumor localization, competitive with existing diffusion-based anomaly detection methods. A comprehensive hyperparameter ablation study across 120 configurations reveals that the noise injection level $t_{\text{start}}$ is the dominant factor in detection performance, while the guidance scale provides a clinically useful sensitivity--specificity trade-off. The model also generates diverse synthetic brain MRIs with an FID of 144.43.
+
+We further contribute explainability mechanisms---self-attention visualization and denoising trajectory analysis---that provide insight into how the model processes and reconstructs brain anatomy. These interpretability tools, combined with a thorough discussion of ethical considerations, support the responsible development of generative AI for medical imaging.
+
+Future work will explore extending the pipeline to 3D volumetric processing, training on larger and more diverse multi-institutional datasets, incorporating multi-modal conditioning (e.g., clinical metadata), and performing latent space interpolation analysis to characterize the learned anatomical manifold. Clinical validation through prospective radiologist studies remains a critical step toward translation.
+
+% ============================================================
+% ACKNOWLEDGMENTS
+% ============================================================
+\section*{Acknowledgments}
+
+The authors acknowledge the creators of the Brain Tumor Detection dataset on Kaggle for making their data publicly available, and the MONAI Consortium for their open-source medical imaging framework. All computations were performed on a consumer-grade NVIDIA RTX 4060 GPU, demonstrating the accessibility of latent diffusion methods for medical imaging research.
+
+% ============================================================
+% BIBLIOGRAPHY
+% ============================================================
+\bibliographystyle{unsrt}
+\bibliography{references}
+
+\end{document}

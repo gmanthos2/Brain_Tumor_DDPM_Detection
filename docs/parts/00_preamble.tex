@@ -1,0 +1,51 @@
+\documentclass[12pt,a4paper]{article}
+
+% ---- Packages ----
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{setspace}
+\usepackage{enumitem}
+
+
+% ---- Hyperref setup ----
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  citecolor=blue!70!black,
+  urlcolor=blue!70!black
+}
+
+% ---- Title ----
+\title{\textbf{Latent Diffusion Models for Brain MRI Anomaly Detection and Synthetic Image Generation}}
+
+\author{
+  George Manthos \\
+  \textit{Department of Computer Science} \\
+  \textit{University of Piraeus, Greece} \\
+  \texttt{gmanthos@unipi.gr}
+}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+% ---- Abstract ----
+\begin{abstract}
+\noindent
+We present a two-stage latent diffusion framework for unsupervised brain tumor detection and synthetic medical image generation. A Variational Autoencoder (VAE) compresses $256 \times 256$ grayscale brain MRI slices into a compact $32 \times 32 \times 4$ latent representation, where a Denoising Diffusion Probabilistic Model (DDPM) with a U-Net backbone learns the distribution of healthy brain anatomy. For anomaly detection, input images are partially noised and reconstructed via Denoising Diffusion Implicit Models (DDIM) sampling conditioned on the healthy class using Classifier-Free Guidance (CFG); pixel-wise reconstruction errors then localize pathological regions such as tumors. For data augmentation, the model generates synthetic brain MRIs by sampling from the learned healthy distribution. We conduct an extensive hyperparameter ablation study across 120 configurations, evaluating the effects of diffusion checkpoint maturity, noise injection level ($t_\text{start}$), and guidance scale on detection performance. Our best configuration achieves an image-level AUROC of 0.756 and a pixel-level AUROC of 0.894 for tumor localization. Synthetic image quality is assessed via Fr\'{e}chet Inception Distance (FID = 144.43), Structural Similarity Index (SSIM), and Learned Perceptual Image Patch Similarity (LPIPS). Additionally, we provide model explainability through self-attention map visualization and denoising trajectory analysis, and discuss ethical considerations for the clinical deployment of generative models in medical imaging.
+\end{abstract}
+
+\noindent\textbf{Keywords:} diffusion models; anomaly detection; brain MRI; latent diffusion; synthetic medical images; DDPM; variational autoencoder; explainability
+
+\vspace{1em}

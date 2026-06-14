@@ -1,0 +1,39 @@
+% ============================================================
+% 2. RELATED WORK
+% ============================================================
+\section{Related Work}
+\label{sec:related_work}
+
+\subsection{Denoising Diffusion Models}
+
+Denoising Diffusion Probabilistic Models (DDPMs), introduced by Ho et al.~\cite{ho2020denoising}, define a forward Markov chain that progressively corrupts data with Gaussian noise over $T$ timesteps, and a learned reverse process that iteratively denoises samples. The training objective is a simplified noise prediction loss:
+\begin{equation}
+\mathcal{L} = \mathbb{E}_{t, \mathbf{x}_0, \boldsymbol{\epsilon}} \left[ \| \boldsymbol{\epsilon} - \boldsymbol{\epsilon}_\theta(\mathbf{x}_t, t) \|^2 \right],
+\label{eq:ddpm_loss}
+\end{equation}
+where $\boldsymbol{\epsilon}_\theta$ is a neural network (typically a U-Net) trained to predict the noise $\boldsymbol{\epsilon}$ added at timestep $t$.
+
+Song et al.~\cite{song2021denoising} introduced Denoising Diffusion Implicit Models (DDIM), a non-Markovian generalization that enables deterministic sampling with significantly fewer steps (e.g., 50 instead of 1000), making diffusion models practical for iterative applications such as anomaly detection.
+
+Latent Diffusion Models (LDMs)~\cite{rombach2022high} further improve efficiency by first compressing images into a low-dimensional latent space via a pretrained autoencoder, then applying the diffusion process in this compressed representation. This reduces computational cost by orders of magnitude while maintaining high-fidelity generation.
+
+Classifier-Free Guidance (CFG)~\cite{ho2022classifier} provides a mechanism for conditional generation without requiring a separate classifier. During training, the class label is randomly dropped with probability $p$; at inference, the guided prediction combines conditional and unconditional outputs:
+\begin{equation}
+\tilde{\boldsymbol{\epsilon}} = \boldsymbol{\epsilon}_\theta(\mathbf{x}_t, t, \varnothing) + w \cdot \left( \boldsymbol{\epsilon}_\theta(\mathbf{x}_t, t, c) - \boldsymbol{\epsilon}_\theta(\mathbf{x}_t, t, \varnothing) \right),
+\label{eq:cfg}
+\end{equation}
+where $w$ is the guidance scale and $\varnothing$ denotes the null (unconditional) class token.
+
+\subsection{Anomaly Detection in Medical Imaging}
+
+Unsupervised anomaly detection in medical imaging typically follows a reconstruction-based paradigm: a generative model is trained exclusively on healthy data, and anomalies are identified as regions where the model fails to faithfully reconstruct the input~\cite{baur2021autoencoders}.
+
+Early approaches employed autoencoders and variational autoencoders (VAEs)~\cite{kingma2014auto} for this purpose, but their limited expressiveness often produced blurry reconstructions that obscured the distinction between healthy variation and true pathology~\cite{baur2021autoencoders}. GAN-based methods such as f-AnoGAN~\cite{schlegl2019f} improved reconstruction quality but introduced optimization instabilities during the inversion step.
+
+Diffusion-based anomaly detection has recently emerged as a compelling alternative. Wyatt et al.~\cite{wyatt2022anoddpm} proposed AnoDDPM, which uses simplex noise patterns and partial noising to detect anomalies in brain MRI. Wolleb et al.~\cite{wolleb2022diffusion} demonstrated that conditioning the reverse diffusion process on a healthy class label enables the model to ``correct'' pathological regions during reconstruction. Sanchez et al.~\cite{sanchez2022healthy} framed anomaly detection as counterfactual generation, producing healthy versions of pathological inputs. Behrendt et al.~\cite{behrendt2024patched} introduced patched diffusion models that process local image regions for improved anomaly localization in brain MRI.
+
+\subsection{Synthetic Medical Image Generation}
+
+Generative models for medical image synthesis aim to produce realistic training data that can augment limited clinical datasets. GANs have been widely applied for this purpose across various modalities~\cite{yi2019generative}, but training instability and mode collapse remain persistent challenges.
+
+Diffusion models have shown particular promise for medical image synthesis. Pinaya et al.~\cite{pinaya2022brain} demonstrated high-quality brain image generation using latent diffusion models with the MONAI framework~\cite{pinaya2023generative}. Dorjsembe et al.~\cite{dorjsembe2022three} extended DDPMs to three-dimensional medical volumes. These approaches highlight the potential of diffusion models to generate diverse, high-fidelity medical images while avoiding the training difficulties associated with GANs.

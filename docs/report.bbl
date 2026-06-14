@@ -1,0 +1,168 @@
+\begin{thebibliography}{10}
+
+\bibitem{baur2021autoencoders}
+Christoph Baur, Stefan Denner, Benedikt Wiestler, Nassir Navab, and Shadi
+  Albarqouni.
+\newblock Autoencoders for unsupervised anomaly segmentation in brain {MR}
+  images: A comparative study.
+\newblock {\em Medical Image Analysis}, 69:101952, 2021.
+
+\bibitem{yi2019generative}
+Xin Yi, Ekta Walia, and Paul Babyn.
+\newblock Generative adversarial network in medical imaging: A review.
+\newblock {\em Medical Image Analysis}, 58:101552, 2019.
+
+\bibitem{schlegl2019f}
+Thomas Schlegl, Philipp Seeb{\"o}ck, Sebastian~M Waldstein, Georg Langs, and
+  Ursula Schmidt-Erfurth.
+\newblock f-{AnoGAN}: Fast unsupervised anomaly detection with generative
+  adversarial networks.
+\newblock {\em Medical Image Analysis}, 54:30--44, 2019.
+
+\bibitem{goodfellow2014generative}
+Ian Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley,
+  Sherjil Ozair, Aaron Courville, and Yoshua Bengio.
+\newblock Generative adversarial nets.
+\newblock {\em Advances in Neural Information Processing Systems}, 27, 2014.
+
+\bibitem{ho2020denoising}
+Jonathan Ho, Ajay Jain, and Pieter Abbeel.
+\newblock Denoising diffusion probabilistic models.
+\newblock {\em Advances in Neural Information Processing Systems},
+  33:6840--6851, 2020.
+
+\bibitem{dhariwal2021diffusion}
+Prafulla Dhariwal and Alexander Nichol.
+\newblock Diffusion models beat {GANs} on image synthesis.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  volume~34, pages 8780--8794, 2021.
+
+\bibitem{rombach2022high}
+Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Bj{\"o}rn
+  Ommer.
+\newblock High-resolution image synthesis with latent diffusion models.
+\newblock In {\em Proceedings of the IEEE/CVF Conference on Computer Vision and
+  Pattern Recognition}, pages 10684--10695, 2022.
+
+\bibitem{wyatt2022anoddpm}
+Julian Wyatt, Adam Leach, Sebastian~M Sheridan, and Walterio~W Mayol-Cuevas.
+\newblock {AnoDDPM}: Anomaly detection with denoising diffusion probabilistic
+  models using simplex noise.
+\newblock pages 650--656, 2022.
+
+\bibitem{wolleb2022diffusion}
+Julia Wolleb, Robin Sandk{\"u}hler, Florentin Bieder, Philippe Valmaggia, and
+  Philippe~C Cattin.
+\newblock Diffusion models for medical anomaly detection.
+\newblock pages 35--45, 2022.
+
+\bibitem{sanchez2022healthy}
+Pedro Sanchez, Antanas Kascenas, Xiao Liu, Alison~Q O'Neil, and Sotirios~A
+  Tsaftaris.
+\newblock What is healthy? generative counterfactual diffusion for lesion
+  localization.
+\newblock pages 31--41, 2022.
+
+\bibitem{song2021denoising}
+Jiaming Song, Chenlin Meng, and Stefano Ermon.
+\newblock Denoising diffusion implicit models.
+\newblock {\em arXiv preprint arXiv:2010.02502}, 2021.
+
+\bibitem{ho2022classifier}
+Jonathan Ho and Tim Salimans.
+\newblock Classifier-free diffusion guidance.
+\newblock {\em arXiv preprint arXiv:2207.12598}, 2022.
+
+\bibitem{kingma2014auto}
+Diederik~P Kingma and Max Welling.
+\newblock Auto-encoding variational {Bayes}.
+\newblock {\em arXiv preprint arXiv:1312.6114}, 2014.
+
+\bibitem{behrendt2024patched}
+Finn Behrendt, Debayan Bhatt, Julia Kr{\"u}ger, Roland Opfer, and Alexander
+  Schlaefer.
+\newblock Patched diffusion models for unsupervised anomaly detection in brain
+  {MRI}.
+\newblock {\em Medical Image Analysis}, 93:103069, 2024.
+
+\bibitem{pinaya2022brain}
+Walter~HL Pinaya, Petru-Daniel Tudosiu, Jessica Dafflon, Pedro~F Da~Costa,
+  Virginia Fernandez, et~al.
+\newblock Brain imaging generation with latent diffusion models.
+\newblock In {\em MICCAI Workshop on Deep Generative Models}, pages 117--126.
+  Springer, 2022.
+
+\bibitem{pinaya2023generative}
+Walter~HL Pinaya, Mark~S Graham, Eric Kerfoot, Petru-Daniel Tudosiu, Jessica
+  Dafflon, et~al.
+\newblock Generative {AI} for medical imaging: extending the {MONAI} framework.
+\newblock {\em arXiv preprint arXiv:2307.15208}, 2023.
+
+\bibitem{dorjsembe2022three}
+Zolnamar Dorjsembe, Hsing-Kuo Pao, Sodtavilan Sendo, and Choijil Fang.
+\newblock Three-dimensional medical image synthesis with denoising diffusion
+  probabilistic models.
+\newblock In {\em Medical Imaging with Deep Learning}, 2022.
+
+\bibitem{monai2022}
+{MONAI Consortium}.
+\newblock {MONAI}: An open-source framework for deep learning in healthcare.
+\newblock {\em arXiv preprint arXiv:2211.02701}, 2022.
+
+\bibitem{zhang2018perceptual}
+Richard Zhang, Phillip Isola, Alexei~A Efros, Eli Shechtman, and Oliver Wang.
+\newblock The unreasonable effectiveness of deep features as a perceptual
+  metric.
+\newblock In {\em Proceedings of the IEEE Conference on Computer Vision and
+  Pattern Recognition}, pages 586--595, 2018.
+
+\bibitem{ronneberger2015u}
+Olaf Ronneberger, Philipp Fischer, and Thomas Brox.
+\newblock U-{Net}: Convolutional networks for biomedical image segmentation.
+\newblock In {\em International Conference on Medical Image Computing and
+  Computer-Assisted Intervention}, pages 234--241. Springer, 2015.
+
+\bibitem{vaswani2017attention}
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones,
+  Aidan~N Gomez, {\L}ukasz Kaiser, and Illia Polosukhin.
+\newblock Attention is all you need.
+\newblock {\em Advances in Neural Information Processing Systems}, 30, 2017.
+
+\bibitem{polyak1992acceleration}
+Boris~T Polyak and Anatoli~B Juditsky.
+\newblock Acceleration of stochastic approximation by averaging.
+\newblock {\em SIAM Journal on Control and Optimization}, 30(4):838--855, 1992.
+
+\bibitem{bhuvaji2020brain}
+Sagar Bhuvaji, Ankita Kadam, Prajakta Bhumkar, Sameer Dedge, and Swati Kanchan.
+\newblock Brain tumor detection.
+\newblock Kaggle, 2020.
+\newblock
+  \url{https://www.kaggle.com/datasets/ahmedhamada0/brain-tumor-detection}.
+
+\bibitem{heusel2017gans}
+Martin Heusel, Hubert Ramsauer, Thomas Unterthiner, Bernhard Nessler, and Sepp
+  Hochreiter.
+\newblock {GANs} trained by a two time-scale update rule converge to a local
+  {Nash} equilibrium.
+\newblock {\em Advances in Neural Information Processing Systems}, 30, 2017.
+
+\bibitem{wang2004image}
+Zhou Wang, Alan~C Bovik, Hamid~R Sheikh, and Eero~P Simoncelli.
+\newblock Image quality assessment: from error visibility to structural
+  similarity.
+\newblock {\em IEEE Transactions on Image Processing}, 13(4):600--612, 2004.
+
+\bibitem{akbar2023beware}
+Muhammad~Usman Akbar, Wuhao Wang, and Anders Eklund.
+\newblock Beware of diffusion models for synthesizing medical images -- a
+  comparison with {GANs} in terms of memorizing training data.
+\newblock In {\em Medical Imaging with Deep Learning}, 2023.
+
+\bibitem{dar2024investigating}
+Salman~UH Dar, Yuxin Ye, Zachary Eidex, Luke Peng, Richard Breen, et~al.
+\newblock Investigating data memorization in 3d latent diffusion models for
+  medical image synthesis.
+\newblock {\em arXiv preprint arXiv:2307.01148}, 2024.
+
+\end{thebibliography}

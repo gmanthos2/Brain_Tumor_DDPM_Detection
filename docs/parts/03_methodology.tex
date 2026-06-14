@@ -1,0 +1,84 @@
+% ============================================================
+% 3. METHODOLOGY
+% ============================================================
+\section{Methodology}
+\label{sec:methodology}
+
+Our pipeline follows a two-stage latent diffusion architecture. Stage~1 employs a Variational Autoencoder (VAE) that compresses brain MRI images into a compact latent space. Stage~2 trains a class-conditional DDPM in this latent space to model the distribution of healthy brain anatomy. At inference time, the system supports two operational modes: anomaly detection via partial noising and healthy-conditioned reconstruction, and synthetic image generation via full DDIM sampling.
+
+\subsection{Variational Autoencoder (Stage 1)}
+\label{sec:vae}
+
+The VAE is based on the \texttt{AutoencoderKL} architecture from the MONAI framework~\cite{monai2022, pinaya2023generative}. It maps grayscale brain MRI images from pixel space $\mathbb{R}^{1 \times 256 \times 256}$ to a latent space $\mathbb{R}^{4 \times 32 \times 32}$, achieving an $8\times$ spatial downsampling with 4~latent channels.
+
+The encoder follows a hierarchical structure with channel progression $[64, 128, 256, 256]$, employing 2~residual blocks per resolution level and self-attention at the two lowest resolutions. The decoder mirrors this architecture symmetrically. The training objective combines three loss terms:
+\begin{equation}
+\mathcal{L}_{\text{VAE}} = \mathcal{L}_{\text{L1}} + 0.5 \cdot \mathcal{L}_{\text{LPIPS}} + 10^{-6} \cdot \mathcal{L}_{\text{KL}},
+\label{eq:vae_loss}
+\end{equation}
+where $\mathcal{L}_{\text{L1}}$ is the pixel-wise reconstruction loss, $\mathcal{L}_{\text{LPIPS}}$ is the perceptual loss~\cite{zhang2018perceptual}, and $\mathcal{L}_{\text{KL}}$ is the Kullback--Leibler divergence regularization. The low KL weight ($\beta = 10^{-6}$) prioritizes reconstruction fidelity over latent space regularity.
+
+The VAE was trained for 150 epochs with a batch size of 4 and gradient accumulation over 8 steps (effective batch size of 32), using the AdamW optimizer with a learning rate of $10^{-4}$ and mixed-precision training (AMP).
+
+\subsection{Latent Space Normalization}
+\label{sec:normalization}
+
+A critical implementation detail concerns the statistical properties of the VAE latent space. We observed that raw VAE latents exhibited a per-channel mean of approximately 0.86 and standard deviation of approximately 7.2---far from the standard normal distribution $\mathcal{N}(0, 1)$ assumed by the DDPM noise schedule. Operating the diffusion process on unnormalized latents caused the model to produce pure noise during generation, as the signal-to-noise ratio at each timestep was fundamentally miscalibrated.
+
+To resolve this, we precompute per-channel mean $\boldsymbol{\mu}$ and standard deviation $\boldsymbol{\sigma}$ statistics across the entire training set and apply z-score normalization:
+\begin{equation}
+\mathbf{z}_{\text{norm}} = \frac{\mathbf{z}_{\text{raw}} - \boldsymbol{\mu}}{\boldsymbol{\sigma}}, \qquad
+\mathbf{z}_{\text{raw}} = \mathbf{z}_{\text{norm}} \cdot \boldsymbol{\sigma} + \boldsymbol{\mu}.
+\label{eq:normalization}
+\end{equation}
+Normalization is applied before DDPM training and forward noising; denormalization is applied after DDIM sampling and before VAE decoding. This step proved essential for successful training and is stored as a persistent statistics file for reproducibility.
+
+\subsection{Denoising Diffusion Probabilistic Model (Stage 2)}
+\label{sec:ddpm}
+
+The DDPM operates in the normalized latent space using a U-Net architecture~\cite{ronneberger2015u} adapted for noise prediction. The U-Net processes $32 \times 32 \times 4$ latent tensors through an encoder--decoder structure with skip connections.
+
+\paragraph{Architecture.} The U-Net uses a base channel width of 128 with channel multipliers $[1, 2, 4, 4]$, resulting in feature maps of $[128, 256, 512, 512]$ channels across four resolution levels ($32 \rightarrow 16 \rightarrow 8 \rightarrow 4$). Each level contains 2~residual blocks with GroupNorm and SiLU activations. Multi-head self-attention~\cite{vaswani2017attention} with 4~heads is applied at resolutions $16 \times 16$ and $8 \times 8$. A middle block with residual--attention--residual structure processes the $4 \times 4$ bottleneck. Gradient checkpointing is enabled throughout to fit within 8~GB VRAM.
+
+\paragraph{Conditioning.} Timestep conditioning uses sinusoidal positional embeddings projected through a two-layer MLP. Class conditioning is implemented via a learned embedding table with 3~entries: healthy (class 0), anomalous (class 1), and a null token ($\varnothing$) for unconditional generation. The time and class embeddings are summed and injected into each residual block via additive conditioning.
+
+\paragraph{Noise Schedule.} We employ a linear noise schedule with $\beta_{\text{start}} = 10^{-4}$ and $\beta_{\text{end}} = 0.02$ over $T = 1000$ timesteps. All derived quantities ($\alpha_t$, $\bar{\alpha}_t$, posterior coefficients) are precomputed for efficient training and sampling.
+
+\paragraph{Training.} The model is trained for 200,000 steps with batch size 32, using AdamW (learning rate $2 \times 10^{-4}$, weight decay $0.01$), gradient clipping at norm 1.0, and mixed-precision training. An Exponential Moving Average (EMA)~\cite{polyak1992acceleration} of the model weights with decay $0.9999$ is maintained throughout training, and EMA weights are used for all inference. The training loss (Equation~\ref{eq:ddpm_loss}) converged to approximately $0.025$--$0.035$.
+
+\subsection{Classifier-Free Guidance}
+\label{sec:cfg}
+
+During training, class labels are randomly replaced with the null token $\varnothing$ with probability $p = 0.1$, enabling the model to learn both conditional and unconditional noise prediction. At inference, the guided prediction follows Equation~\ref{eq:cfg}, where the guidance scale $w$ controls the strength of class conditioning. Higher guidance scales produce reconstructions more strongly biased toward the conditioned class, at the potential cost of reduced diversity and increased artifacts.
+
+\subsection{Anomaly Detection Pipeline}
+\label{sec:anomaly_pipeline}
+
+The anomaly detection process is formalized in Algorithm~\ref{alg:anomaly}. Given an input brain MRI $\mathbf{x}$, the pipeline: (1)~encodes it to the latent space via the VAE encoder, (2)~normalizes the latent representation, (3)~adds noise at a specified timestep $t_{\text{start}}$ via the forward diffusion process, (4)~reconstructs a healthy version $\hat{\mathbf{x}}$ by running DDIM sampling conditioned on the healthy class (class 0) with CFG, (5)~denormalizes and decodes back to pixel space, and (6)~computes the anomaly map as the absolute pixel-wise difference $|\mathbf{x} - \hat{\mathbf{x}}|$, smoothed with a Gaussian filter ($\sigma = 2.0$). The global anomaly score is the mean of the raw (unnormalized) L1 error map.
+
+\begin{algorithm}[H]
+\caption{Diffusion-Based Anomaly Detection}
+\label{alg:anomaly}
+\begin{algorithmic}[1]
+\REQUIRE Input image $\mathbf{x}$, noise level $t_{\text{start}}$, guidance scale $w$, DDIM steps $S$
+\ENSURE Anomaly map $\mathbf{A}$, anomaly score $s$
+\STATE $\mathbf{z}_0 \leftarrow \text{VAE}_{\text{enc}}(\mathbf{x})$ \COMMENT{Encode to latent space}
+\STATE $\mathbf{z}_0^{\text{norm}} \leftarrow (\mathbf{z}_0 - \boldsymbol{\mu}) / \boldsymbol{\sigma}$ \COMMENT{Normalize}
+\STATE $\boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \mathbf{I})$
+\STATE $\mathbf{z}_{t} \leftarrow \sqrt{\bar{\alpha}_{t}} \, \mathbf{z}_0^{\text{norm}} + \sqrt{1 - \bar{\alpha}_{t}} \, \boldsymbol{\epsilon}$ \COMMENT{Forward noise}
+\STATE $\hat{\mathbf{z}}_0^{\text{norm}} \leftarrow \text{DDIM}(\mathbf{z}_{t},\, c{=}\text{healthy},\, w,\, S)$ \COMMENT{Healthy reconstruction}
+\STATE $\hat{\mathbf{z}}_0 \leftarrow \hat{\mathbf{z}}_0^{\text{norm}} \cdot \boldsymbol{\sigma} + \boldsymbol{\mu}$ \COMMENT{Denormalize}
+\STATE $\hat{\mathbf{x}} \leftarrow \text{VAE}_{\text{dec}}(\hat{\mathbf{z}}_0)$ \COMMENT{Decode to pixel space}
+\STATE $\mathbf{A}_{\text{raw}} \leftarrow |\mathbf{x} - \hat{\mathbf{x}}|$
+\STATE $\mathbf{A} \leftarrow \text{GaussianSmooth}(\mathbf{A}_{\text{raw}}, \sigma{=}2.0)$
+\STATE $s \leftarrow \text{mean}(\mathbf{A}_{\text{raw}})$ \COMMENT{Global anomaly score}
+\RETURN $\mathbf{A}, s$
+\end{algorithmic}
+\end{algorithm}
+
+The parameter $t_{\text{start}}$ controls the trade-off between anomaly destruction and anatomy preservation: higher values inject more noise (destroying more of the original signal, including both pathology and healthy structure), while lower values preserve more of the original anatomy but may fail to remove the anomaly. This trade-off is analyzed in detail in Section~\ref{sec:results}.
+
+\subsection{Synthetic Image Generation}
+\label{sec:generation}
+
+For synthetic image generation, the pipeline performs full DDIM sampling starting from pure Gaussian noise $\mathbf{z}_T \sim \mathcal{N}(\mathbf{0}, \mathbf{I})$, conditioned on the healthy class with 50 deterministic DDIM steps ($\eta = 0$). The resulting normalized latent is denormalized and decoded through the VAE decoder to produce a $256 \times 256$ grayscale brain MRI.
