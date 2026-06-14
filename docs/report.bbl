@@ -48,20 +48,23 @@ Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Bj{\"o}rn
 Julian Wyatt, Adam Leach, Sebastian~M Sheridan, and Walterio~W Mayol-Cuevas.
 \newblock {AnoDDPM}: Anomaly detection with denoising diffusion probabilistic
   models using simplex noise.
-\newblock pages 650--656, 2022.
+\newblock In {\em Proceedings of the IEEE/CVF Conference on Computer Vision and
+  Pattern Recognition (CVPR) Workshops}, pages 650--656, 2022.
 
 \bibitem{wolleb2022diffusion}
 Julia Wolleb, Robin Sandk{\"u}hler, Florentin Bieder, Philippe Valmaggia, and
   Philippe~C Cattin.
 \newblock Diffusion models for medical anomaly detection.
-\newblock pages 35--45, 2022.
+\newblock In {\em International Conference on Medical Image Computing and
+  Computer-Assisted Intervention (MICCAI)}, pages 35--45. Springer, 2022.
 
 \bibitem{sanchez2022healthy}
 Pedro Sanchez, Antanas Kascenas, Xiao Liu, Alison~Q O'Neil, and Sotirios~A
   Tsaftaris.
 \newblock What is healthy? generative counterfactual diffusion for lesion
   localization.
-\newblock pages 31--41, 2022.
+\newblock In {\em MICCAI Workshop on Deep Generative Models}, pages 34--44.
+  Springer, 2022.
 
 \bibitem{song2021denoising}
 Jiaming Song, Chenlin Meng, and Stefano Ermon.
@@ -79,11 +82,12 @@ Diederik~P Kingma and Max Welling.
 \newblock {\em arXiv preprint arXiv:1312.6114}, 2014.
 
 \bibitem{behrendt2024patched}
-Finn Behrendt, Debayan Bhatt, Julia Kr{\"u}ger, Roland Opfer, and Alexander
-  Schlaefer.
+Finn Behrendt, Debayan Bhattacharya, Julia Kr{\"u}ger, Roland Opfer, and
+  Alexander Schlaefer.
 \newblock Patched diffusion models for unsupervised anomaly detection in brain
   {MRI}.
-\newblock {\em Medical Image Analysis}, 93:103069, 2024.
+\newblock In {\em Medical Imaging with Deep Learning (MIDL)}, pages 1019--1032,
+  2022.
 
 \bibitem{pinaya2022brain}
 Walter~HL Pinaya, Petru-Daniel Tudosiu, Jessica Dafflon, Pedro~F Da~Costa,
@@ -99,7 +103,7 @@ Walter~HL Pinaya, Mark~S Graham, Eric Kerfoot, Petru-Daniel Tudosiu, Jessica
 \newblock {\em arXiv preprint arXiv:2307.15208}, 2023.
 
 \bibitem{dorjsembe2022three}
-Zolnamar Dorjsembe, Hsing-Kuo Pao, Sodtavilan Sendo, and Choijil Fang.
+Zolnamar Dorjsembe, Sodtavilan Odonchimed, and Furen Xiao.
 \newblock Three-dimensional medical image synthesis with denoising diffusion
   probabilistic models.
 \newblock In {\em Medical Imaging with Deep Learning}, 2022.
@@ -156,13 +160,15 @@ Zhou Wang, Alan~C Bovik, Hamid~R Sheikh, and Eero~P Simoncelli.
 \bibitem{akbar2023beware}
 Muhammad~Usman Akbar, Wuhao Wang, and Anders Eklund.
 \newblock Beware of diffusion models for synthesizing medical images -- a
-  comparison with {GANs} in terms of memorizing training data.
-\newblock In {\em Medical Imaging with Deep Learning}, 2023.
+  comparison with {GANs} in terms of memorizing brain {MRI} and chest x-ray
+  images.
+\newblock {\em Machine Learning: Science and Technology}, 2025.
 
 \bibitem{dar2024investigating}
-Salman~UH Dar, Yuxin Ye, Zachary Eidex, Luke Peng, Richard Breen, et~al.
+Salman Ul~Hassan Dar, Arman Ghanaat, Jannik Kahmann, Isabelle Ayx, Theano
+  Papavassiliu, Stefan~O. Schoenberg, and Sandy Engelhardt.
 \newblock Investigating data memorization in 3d latent diffusion models for
   medical image synthesis.
-\newblock {\em arXiv preprint arXiv:2307.01148}, 2024.
+\newblock {\em arXiv preprint arXiv:2307.01148}, 2023.
 
 \end{thebibliography}

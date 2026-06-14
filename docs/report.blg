@@ -3,48 +3,44 @@ Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: report.aux
 The style file: unsrt.bst
 Database file #1: references.bib
-Warning--empty journal in wyatt2022anoddpm
-Warning--empty journal in wolleb2022diffusion
-Warning--empty journal in sanchez2022healthy
 You've used 27 entries,
             1791 wiz_defined-function locations,
-            585 strings with 8844 characters,
-and the built_in function-call counts, 7102 in all, are:
-= -- 602
+            587 strings with 9100 characters,
+and the built_in function-call counts, 7366 in all, are:
+= -- 637
 > -- 398
-< -- 9
+< -- 10
 + -- 142
 - -- 115
-* -- 458
-:= -- 1123
-add.period$ -- 84
+* -- 468
+:= -- 1143
+add.period$ -- 86
 call.type$ -- 27
 change.case$ -- 27
 chr.to.int$ -- 0
-cite$ -- 30
-duplicate$ -- 325
-empty$ -- 635
+cite$ -- 27
+duplicate$ -- 344
+empty$ -- 670
 format.name$ -- 115
-if$ -- 1594
+if$ -- 1676
 int.to.chr$ -- 0
 int.to.str$ -- 27
 missing$ -- 26
 newline$ -- 139
 num.names$ -- 27
-pop$ -- 90
+pop$ -- 92
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 0
-skip$ -- 189
+skip$ -- 206
 stack$ -- 0
-substring$ -- 418
-swap$ -- 106
-text.length$ -- 9
+substring$ -- 440
+swap$ -- 123
+text.length$ -- 10
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 0
-warning$ -- 3
-while$ -- 62
+warning$ -- 0
+while$ -- 64
 width$ -- 29
-write$ -- 292
-(There were 3 warnings)
+write$ -- 297
