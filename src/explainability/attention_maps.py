@@ -125,7 +125,10 @@ def main():
     parser.add_argument("--vae-config", type=str, default="configs/vae_config.yaml")
     parser.add_argument("--ddpm-config", type=str, default="configs/ddpm_config.yaml")
     parser.add_argument("--vae-checkpoint", type=str, default="checkpoints/vae/best.pt")
-    parser.add_argument("--ddpm-checkpoint", type=str, default="checkpoints/ddpm/step_130000.pt")
+    parser.add_argument("--ddpm-checkpoint", type=str, default="checkpoints/ddpm/step_100000.pt")
+    parser.add_argument("--t-start", type=int, default=150)
+    parser.add_argument("--guidance-scale", type=float, default=7.5)
+    parser.add_argument("--ddim-steps", type=int, default=50)
     args = parser.parse_args()
     
     output_path = project_root / args.output
@@ -144,7 +147,12 @@ def main():
     extractor.register_hooks()
     
     print(f"Running detection on {args.image}...")
-    result = detector.detect(str(project_root / args.image))
+    result = detector.detect(
+        str(project_root / args.image),
+        t_start=args.t_start,
+        guidance_scale=args.guidance_scale,
+        ddim_steps=args.ddim_steps
+    )
     
     print("Visualizing attention maps...")
     visualize_attention(

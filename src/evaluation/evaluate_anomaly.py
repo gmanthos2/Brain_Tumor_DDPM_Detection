@@ -50,18 +50,21 @@ def create_mask_from_regions(regions, original_size, target_size=(256, 256)):
 def main():
     parser = argparse.ArgumentParser(description="Evaluate Anomaly Detection using pixel-level AUROC")
     parser.add_argument("--annotations", type=str, default="dataset/Br35H-Mask-RCNN/annotations_all.json")
-    parser.add_argument("--image-dir", type=str, default="dataset/yes")
+    parser.add_argument("--original-dir", type=str, default="dataset/yes")
+    parser.add_argument("--processed-dir", type=str, default="data/processed/test/anomalous")
     parser.add_argument("--output-dir", type=str, default="results/evaluation")
-    parser.add_argument("--max-samples", type=int, default=100, help="Max images to evaluate to save time")
-    parser.add_argument("--t-start", type=int, default=300, help="Noise level for DDIM inversion/reconstruction")
+    parser.add_argument("--max-samples", type=int, default=0, help="Max images to evaluate. 0 for all.")
+    parser.add_argument("--t-start", type=int, default=150)
+    parser.add_argument("--guidance-scale", type=float, default=7.5)
     parser.add_argument("--ddim-steps", type=int, default=50)
-    parser.add_argument("--ddpm-checkpoint", type=str, default="checkpoints/ddpm/step_130000.pt")
+    parser.add_argument("--ddpm-checkpoint", type=str, default="checkpoints/ddpm/step_100000.pt")
     
     args = parser.parse_args()
     
     project_root = Path(__file__).resolve().parents[2]
     annotations_path = project_root / args.annotations
-    image_dir = project_root / args.image_dir
+    original_dir = project_root / args.original_dir
+    processed_dir = project_root / args.processed_dir
     output_dir = project_root / args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
     
@@ -93,35 +96,43 @@ def main():
         if not regions:
             continue
             
-        img_path = image_dir / filename
-        if not img_path.exists():
+        orig_img_path = original_dir / filename
+        if not orig_img_path.exists():
             continue
             
         # Get original image size
         try:
-            with Image.open(img_path) as img:
+            with Image.open(orig_img_path) as img:
                 orig_size = img.size # (width, height)
         except Exception as e:
-            logger.warning(f"Failed to open {img_path}: {e}")
+            logger.warning(f"Failed to open {orig_img_path}: {e}")
             continue
             
         # Generate Ground Truth Mask (1 for tumor, 0 for background)
         gt_mask = create_mask_from_regions(regions, orig_size, target_size=(256, 256))
         
-        # Generate Anomaly Map from DDPM
+        # Find processed PNG image
+        png_filename = Path(filename).with_suffix('.png').name
+        processed_path = processed_dir / png_filename
+        if not processed_path.exists():
+            continue
+            
+        # Generate Anomaly Map from DDPM using processed image
         try:
             result = detector.detect(
-                str(img_path),
+                str(processed_path),
                 t_start=args.t_start,
+                guidance_scale=args.guidance_scale,
                 ddim_steps=args.ddim_steps
             )
             anomaly_map = result["anomaly_map"] # (256, 256) numpy array
         except Exception as e:
-            logger.warning(f"Detection failed for {img_path}: {e}")
+            logger.warning(f"Detection failed for {processed_path}: {e}")
             continue
             
         all_masks.append(gt_mask.flatten())
         all_anomaly_maps.append(anomaly_map.flatten())
+
         
         evaluated_count += 1
         if args.max_samples and evaluated_count >= args.max_samples:
