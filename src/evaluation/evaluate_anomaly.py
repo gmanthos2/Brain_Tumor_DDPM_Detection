@@ -133,6 +133,11 @@ def main():
         all_masks.append(gt_mask.flatten())
         all_anomaly_maps.append(anomaly_map.flatten())
 
+        last_eval_data = {
+            "gt_mask": gt_mask,
+            "result": result,
+            "anomaly_map": anomaly_map
+        }
         
         evaluated_count += 1
         if args.max_samples and evaluated_count >= args.max_samples:
@@ -174,15 +179,15 @@ def main():
     
     # Save a qualitative example
     fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-    axes[0].imshow(result["original"].numpy(), cmap="gray")
+    axes[0].imshow(last_eval_data["result"]["original"].numpy(), cmap="gray")
     axes[0].set_title("Original")
     axes[0].axis("off")
     
-    axes[1].imshow(gt_mask, cmap="gray")
+    axes[1].imshow(last_eval_data["gt_mask"], cmap="gray")
     axes[1].set_title("Ground Truth Mask")
     axes[1].axis("off")
     
-    axes[2].imshow(anomaly_map, cmap="hot")
+    axes[2].imshow(last_eval_data["anomaly_map"], cmap="hot")
     axes[2].set_title("Anomaly Heatmap")
     axes[2].axis("off")
     
