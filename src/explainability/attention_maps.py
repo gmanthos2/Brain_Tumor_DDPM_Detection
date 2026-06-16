@@ -49,10 +49,17 @@ class AttentionExtractor:
         attn_weights = torch.softmax(attn_weights, dim=-1)
         # Average over heads and batch, reshape to spatial
         attn_avg = attn_weights.mean(dim=(0, 1))  # (HW, HW)
-        self.attention_maps[name] = {
-            "weights": attn_avg.cpu().detach(),
-            "spatial_size": (H, W),
-        }
+        attn_avg = attn_weights.mean(dim=(0, 1)).cpu().detach()  # (HW, HW)
+        
+        if name not in self.attention_maps:
+            self.attention_maps[name] = {
+                "weights": attn_avg,
+                "spatial_size": (H, W),
+                "count": 1
+            }
+        else:
+            self.attention_maps[name]["weights"] += attn_avg
+            self.attention_maps[name]["count"] += 1
 
     def clear(self):
         self.attention_maps = {}
@@ -87,7 +94,7 @@ def visualize_attention(
 
     for i, (name, data) in enumerate(attention_data.items()):
         H, W = data["spatial_size"]
-        attn = data["weights"]
+        attn = data["weights"] / data["count"]
 
         if query_point:
             # Show attention from a specific query point
