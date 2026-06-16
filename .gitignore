@@ -23,7 +23,11 @@ dataset/
 data/processed/
 data/latents/
 checkpoints/
-results/
+
+# Ignore specific large result subdirectories
+results/anomaly_maps/
+results/synthetic/individual/
+results/logs/
 
 # OS
 .DS_Store
