@@ -25,8 +25,6 @@ data/latents/
 checkpoints/
 
 # Ignore specific large result subdirectories
-results/anomaly_maps/
-results/synthetic/individual/
 results/logs/
 
 # OS
