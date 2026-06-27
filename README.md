@@ -51,6 +51,10 @@ python -m src.inference.generate --num-samples 100 --save-grid
 python -m src.evaluation.anomaly_metrics --healthy-dir data/processed/test/healthy --anomalous-dir data/processed/test/anomalous
 python -m src.evaluation.generation_metrics --real-dir data/processed/test/healthy --fake-dir results/synthetic/individual
 ```
+## Or use pre-trained models
+
+Download from [pretrained model checkpoints](https://drive.google.com/drive/folders/12s9V5X1zRJAHpfc2mGXl41OCzEijgAZz?usp=sharing)
+and place the models in the `checkpoints/ddpm` and `checkpoints/vae` directories.
 
 ## Project Structure
 
