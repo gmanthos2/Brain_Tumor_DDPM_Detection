@@ -42,3 +42,13 @@ wandb/
 *.tar.gz
 progress_report.md
 handover.md
+
+# LaTeX auto-generated files
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz
