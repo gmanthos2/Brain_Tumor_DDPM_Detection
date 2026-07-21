@@ -425,6 +425,8 @@ To enhance the interpretability of our model's predictions, we provide two compl
 
 \paragraph{Comparison with Related Methods.} Direct comparison with existing methods is challenging due to differences in datasets, preprocessing, and evaluation protocols. However, our image-level AUROC of 0.756 falls within the range reported by comparable methods: AnoDDPM~\cite{wyatt2022anoddpm} achieves AUROCs of 0.70--0.83 depending on the anomaly type and noise configuration, while Wolleb et al.~\cite{wolleb2022diffusion} report 0.74--0.86 on brain tumor datasets. Our pixel-level AUROC of 0.894 is competitive, demonstrating strong localization despite operating at a coarse latent resolution ($32 \times 32$) that is upsampled to $256 \times 256$ by the VAE decoder.
 
+\paragraph{Inference Complexity and Efficiency.} The computational cost of inference is dominated by the iterative DDIM reverse process. Each DDIM step requires one U-Net forward pass, and Classifier-Free Guidance doubles this to two forward passes per step (one conditional, one unconditional). For our default configuration ($S = 50$ DDIM steps with CFG), anomaly detection thus requires $2S = 100$ U-Net evaluations plus one VAE encode and one VAE decode. Total inference complexity scales as $\mathcal{O}(S \cdot \sum_{\ell} C_\ell^2 \cdot H_\ell W_\ell)$, where $C_\ell$ and $H_\ell \times W_\ell$ are the channel count and spatial resolution at each U-Net level~$\ell$. The key efficiency gain of latent diffusion is that the U-Net operates on $32 \times 32$ latent maps rather than $256 \times 256$ pixel-space images, reducing the spatial area by a factor of $64\times$ and yielding an estimated ${\sim}50\times$ reduction in per-pass FLOPs compared to an equivalent pixel-space diffusion model. Combined with DDIM's $20\times$ step reduction relative to full $T = 1000$ DDPM sampling, the overall inference cost is approximately three orders of magnitude lower than a na\"{i}ve pixel-space DDPM baseline. In practice, on our NVIDIA RTX 4060, a single anomaly detection pass completes in approximately 300--350~ms per image (${\sim}3$~images/s), making the pipeline feasible for near-interactive clinical review on consumer-grade hardware. The total model footprint comprises approximately 35M parameters (U-Net) and 17M parameters (VAE), totaling ${\sim}52$M trainable parameters.
+
 \paragraph{Limitations.} Several limitations should be acknowledged:
 \begin{itemize}[leftmargin=*]
   \item \textbf{2D processing}: Our model operates on individual 2D slices, ignoring volumetric context that could improve detection of spatially coherent pathologies.
@@ -434,13 +436,7 @@ To enhance the interpretability of our model's predictions, we provide two compl
   \item \textbf{No clinical validation}: All evaluations are performed on benchmark data; clinical deployment would require prospective validation with radiologist assessment.
 \end{itemize}
 
-% ============================================================
-% 7. ETHICAL CONSIDERATIONS
-% ============================================================
-\section{Ethical Considerations}
-\label{sec:ethics}
-
-The deployment of generative AI models in medical imaging raises important ethical concerns that must be addressed alongside technical contributions.
+Furthermore, the deployment of generative AI models in medical imaging raises important ethical concerns that must be addressed alongside technical contributions.
 
 \paragraph{Data Privacy and Memorization.} Diffusion models trained on small datasets face an elevated risk of memorizing individual training examples~\cite{akbar2023beware, dar2024investigating}. With approximately 1,500 healthy training images, our model could potentially reproduce identifiable patient scans during generation. Mitigations include monitoring for near-duplicate generations via perceptual similarity against the training set and, for clinical deployment, incorporating differential privacy during training.
 
