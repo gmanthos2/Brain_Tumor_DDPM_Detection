@@ -1,61 +1,56 @@
-\documentclass[12pt,a4paper]{article}
+%%%%%%%%%%%%%%%%%%%% report.tex %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Contribution to Springer "Advances in Experimental Medicine and Biology"
+% Formatted using the SVMult document class (contributed volume)
+%
+%%%%%%%%%%%%%%%% Springer %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% ---- Packages ----
-\usepackage[utf8]{inputenc}
-\usepackage{lmodern}
-\usepackage[T1]{fontenc}
-\usepackage{amsmath,amssymb}
+% RECOMMENDED %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[graybox]{svmult}
+
+% ---- Required packages (Springer SVMult recommended set) ----
+% \usepackage{type1cm}  % only needed if CM fonts are not scalable on your system
+\usepackage{makeidx}
 \usepackage{graphicx}
+\usepackage{multicol}
+\usepackage[bottom]{footmisc}
+\usepackage[numbers]{natbib}
+
+% ---- Additional packages needed for this contribution ----
+\usepackage{amsmath,amssymb}
+\let\Bbbk\relax  % resolve conflict between amssymb and newtxmath
+
+\usepackage{newtxtext}
+\usepackage[varvw]{newtxmath}
+
 \usepackage{booktabs}
 \usepackage{hyperref}
-\usepackage[font=small,labelfont=bf]{caption}
-\usepackage{subcaption}
 \usepackage{algorithm}
 \usepackage{algorithmic}
-\usepackage{xcolor}
-\usepackage{float}
-\usepackage[margin=2.5cm]{geometry}
-\usepackage{setspace}
-\usepackage{enumitem}
 
+\makeindex
 
-% ---- Hyperref setup ----
-\hypersetup{
-  colorlinks=true,
-  linkcolor=blue!70!black,
-  citecolor=blue!70!black,
-  urlcolor=blue!70!black
-}
-
-% ---- Title ----
-\title{\textbf{Latent Diffusion Models for Brain MRI Anomaly Detection and Synthetic Image Generation}}
-
-\author{
-  Georgios Manthos \\
-  MTN2513 \\
-  \textit{Department of Digital Systems} \\
-  \textit{University of Piraeus, Greece} \\ 
-  \textit{and} \\
-  \textit{Institute of Information Technology} \\
-  \textit{National Center for Scientific Research Demokritos, Greece} \\
-  \texttt{gmanthos2@gmail.com} \\[0.5cm]
-  \textbf{Prepared for:} Prof. Ilias Maglogiannis
-}
-
-\date{}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
+
+\title*{Latent Diffusion Models for Brain MRI Anomaly Detection and Synthetic Image Generation}
+% Use \titlerunning{Short Title} for an abbreviated version of
+% your contribution title if the original one is too long
+\titlerunning{Latent Diffusion Models for Brain MRI Anomaly Detection}
+
+\author{Georgios Manthos}
+% Use \authorrunning{Short Title} for an abbreviated version of
+% your contribution title if the original one is too long
+\institute{Georgios Manthos \at Department of Digital Systems, University of Piraeus, Greece \and Institute of Information Technology, National Center for Scientific Research Demokritos, Greece, \email{gmanthos2@gmail.com}}
+%
 \maketitle
 
-% ---- Abstract ----
-\begin{abstract}
-\noindent
-We present a two-stage latent diffusion framework for unsupervised brain tumor detection and synthetic medical image generation. A Variational Autoencoder (VAE) compresses $256 \times 256$ grayscale brain MRI slices into a compact $32 \times 32 \times 4$ latent representation, where a Denoising Diffusion Probabilistic Model (DDPM) with a U-Net backbone learns the distribution of healthy brain anatomy. For anomaly detection, input images are partially noised and reconstructed via Denoising Diffusion Implicit Models (DDIM) sampling conditioned on the healthy class using Classifier-Free Guidance (CFG); pixel-wise reconstruction errors then localize pathological regions such as tumors. For data augmentation, the model generates synthetic brain MRIs by sampling from the learned healthy distribution. We conduct an extensive hyperparameter ablation study across 120 configurations, evaluating the effects of diffusion checkpoint maturity, noise injection level ($t_\text{start}$), and guidance scale on detection performance. Our best configuration achieves an image-level AUROC of 0.756 and a pixel-level AUROC of 0.894 for tumor localization. Synthetic image quality is assessed via Fr\'{e}chet Inception Distance (FID = 144.43), Structural Similarity Index (SSIM), and Learned Perceptual Image Patch Similarity (LPIPS). Additionally, we provide model explainability through self-attention map visualization and denoising trajectory analysis, and discuss ethical considerations for the clinical deployment of generative models in medical imaging.
-\end{abstract}
+\abstract*{We present a two-stage latent diffusion framework for unsupervised brain tumor detection and synthetic medical image generation. A Variational Autoencoder (VAE) compresses $256 \times 256$ grayscale brain MRI slices into a compact $32 \times 32 \times 4$ latent representation, where a Denoising Diffusion Probabilistic Model (DDPM) with a U-Net backbone learns the distribution of healthy brain anatomy. For anomaly detection, input images are partially noised and reconstructed via Denoising Diffusion Implicit Models (DDIM) sampling conditioned on the healthy class using Classifier-Free Guidance (CFG); pixel-wise reconstruction errors then localize pathological regions such as tumors. For data augmentation, the model generates synthetic brain MRIs by sampling from the learned healthy distribution. We conduct an extensive hyperparameter ablation study across 120 configurations, evaluating the effects of diffusion checkpoint maturity, noise injection level ($t_\text{start}$), and guidance scale on detection performance. Our best configuration achieves an image-level AUROC of 0.756 and a pixel-level AUROC of 0.894 for tumor localization. Synthetic image quality is assessed via Fr\'{e}chet Inception Distance (FID = 144.43), Structural Similarity Index (SSIM), and Learned Perceptual Image Patch Similarity (LPIPS). Additionally, we provide model explainability through self-attention map visualization and denoising trajectory analysis, and discuss ethical considerations for the clinical deployment of generative models in medical imaging.}
 
-\noindent\textbf{Keywords:} diffusion models; anomaly detection; brain MRI; latent diffusion; synthetic medical images; DDPM; variational autoencoder; ethical AI; explainability
+\abstract{We present a two-stage latent diffusion framework for unsupervised brain tumor detection and synthetic medical image generation. A Variational Autoencoder (VAE) compresses $256 \times 256$ grayscale brain MRI slices into a compact $32 \times 32 \times 4$ latent representation, where a Denoising Diffusion Probabilistic Model (DDPM) with a U-Net backbone learns the distribution of healthy brain anatomy. For anomaly detection, input images are partially noised and reconstructed via Denoising Diffusion Implicit Models (DDIM) sampling conditioned on the healthy class using Classifier-Free Guidance (CFG); pixel-wise reconstruction errors then localize pathological regions such as tumors. For data augmentation, the model generates synthetic brain MRIs by sampling from the learned healthy distribution. We conduct an extensive hyperparameter ablation study across 120 configurations, evaluating the effects of diffusion checkpoint maturity, noise injection level ($t_\text{start}$), and guidance scale on detection performance. Our best configuration achieves an image-level AUROC of 0.756 and a pixel-level AUROC of 0.894 for tumor localization. Synthetic image quality is assessed via Fr\'{e}chet Inception Distance (FID = 144.43), Structural Similarity Index (SSIM), and Learned Perceptual Image Patch Similarity (LPIPS). Additionally, we provide model explainability through self-attention map visualization and denoising trajectory analysis, and discuss ethical considerations for the clinical deployment of generative models in medical imaging.\newline\indent
+\textbf{Keywords:} diffusion models, anomaly detection, brain MRI, latent diffusion, synthetic medical images, DDPM, variational autoencoder, ethical AI, explainability}
 
-\vspace{1em}
 % ============================================================
 % 1. INTRODUCTION
 % ============================================================
@@ -72,7 +67,7 @@ In the context of medical anomaly detection, diffusion-based methods reconstruct
 
 In this work, we present a complete latent diffusion pipeline for brain MRI analysis that serves a dual purpose: (1)~anomaly detection via reconstruction-error-based tumor localization, and (2)~high-quality synthetic brain MRI generation for potential data augmentation. Our contributions are as follows:
 
-\begin{enumerate}[leftmargin=*]
+\begin{enumerate}
   \item We design and implement a two-stage latent diffusion architecture combining a MONAI-based Variational Autoencoder (VAE) with a class-conditional U-Net DDPM, featuring Classifier-Free Guidance (CFG) and DDIM sampling for efficient inference.
   \item We conduct a systematic hyperparameter ablation study across 120 configurations---spanning 10~model checkpoints, 4~noise injection levels, and 3~guidance scales---to characterize the sensitivity of anomaly detection performance to each factor.
   \item We provide quantitative evaluation of both anomaly detection (image-level and pixel-level AUROC) and synthetic image quality (FID, SSIM, LPIPS, diversity).
@@ -163,7 +158,7 @@ During training, class labels are randomly replaced with the null token $\varnot
 
 The anomaly detection process is formalized in Algorithm~\ref{alg:anomaly}. Given an input brain MRI $\mathbf{x}$, the pipeline: (1)~encodes it to the latent space via the VAE encoder, (2)~normalizes the latent representation, (3)~adds noise at a specified timestep $t_{\text{start}}$ via the forward diffusion process, (4)~reconstructs a healthy version $\hat{\mathbf{x}}$ by running DDIM sampling conditioned on the healthy class (class 0) with CFG, (5)~denormalizes and decodes back to pixel space, and (6)~computes the anomaly map as the absolute pixel-wise difference $|\mathbf{x} - \hat{\mathbf{x}}|$, smoothed with a Gaussian filter ($\sigma = 2.0$). The global anomaly score is the mean of the raw (unnormalized) L1 error map.
 
-\begin{algorithm}[H]
+\begin{algorithm}[t]
 \caption{Diffusion-Based Anomaly Detection}
 \label{alg:anomaly}
 \begin{algorithmic}[1]
@@ -207,14 +202,13 @@ All images are preprocessed to $256 \times 256$ grayscale PNG format and normali
 
 The pipeline is implemented in PyTorch 2.12 with MONAI~\cite{monai2022} for the VAE. All experiments run on a single NVIDIA RTX 4060 (8~GB VRAM), using gradient checkpointing, automatic mixed precision, and consolidated latent storage ($\sim$17~MB single tensor file) to fit within memory constraints. Table~\ref{tab:hyperparameters} summarizes the key hyperparameters.
 
-\begin{table}[H]
-\centering
-\caption{Training hyperparameters for the two-stage pipeline.}
+\begin{table}[!t]
+\caption{Training hyperparameters for the two-stage pipeline}
 \label{tab:hyperparameters}
-\begin{tabular}{@{}lcc@{}}
-\toprule
+\begin{tabular}{p{3.5cm}p{3.5cm}p{3.5cm}}
+\hline\noalign{\smallskip}
 \textbf{Parameter} & \textbf{VAE (Stage 1)} & \textbf{DDPM (Stage 2)} \\
-\midrule
+\noalign{\smallskip}\svhline\noalign{\smallskip}
 Input resolution    & $256 \times 256 \times 1$ & $32 \times 32 \times 4$ \\
 Channels            & $[64, 128, 256, 256]$ & $[128, 256, 512, 512]$ \\
 Residual blocks     & 2 per level & 2 per level \\
@@ -226,8 +220,8 @@ Batch size          & 4 (eff.\ 32) & 32 \\
 Training duration   & 150 epochs & 200K steps \\
 EMA decay           & 0.999 & 0.9999 \\
 Gradient clipping   & 1.0 & 1.0 \\
-Mixed precision     & \checkmark & \checkmark \\
-\bottomrule
+Mixed precision     & Yes & Yes \\
+\noalign{\smallskip}\hline\noalign{\smallskip}
 \end{tabular}
 \end{table}
 
@@ -235,7 +229,7 @@ Mixed precision     & \checkmark & \checkmark \\
 \label{sec:metrics}
 
 \paragraph{Anomaly Detection.} We evaluate anomaly detection at two levels:
-\begin{itemize}[leftmargin=*]
+\begin{itemize}
   \item \textbf{Image-level}: Each image receives a scalar anomaly score (mean raw L1 reconstruction error). We report the Area Under the Receiver Operating Characteristic curve (AUROC), Area Under the Precision--Recall Curve (AUPRC), F1-score at the optimal threshold, sensitivity (true positive rate), and specificity (true negative rate).
   \item \textbf{Pixel-level}: Using ground truth polygon masks, we compute pixel-level AUROC by treating each pixel's anomaly map value as a prediction and the binary mask as ground truth.
 \end{itemize}
@@ -252,37 +246,34 @@ Mixed precision     & \checkmark & \checkmark \\
 
 Table~\ref{tab:anomaly_results} presents the anomaly detection performance for the best configuration identified through our grid search: checkpoint \texttt{step\_100000}, $t_{\text{start}} = 150$, and guidance scale $w = 7.5$. This configuration achieves an image-level AUROC of 0.756 and AUPRC of 0.851, demonstrating meaningful discrimination between healthy and anomalous brain MRIs using only unsupervised training on healthy data.
 
-\begin{table}[H]
-\centering
-\caption{Image-level anomaly detection performance (best configuration).}
+\begin{table}[!t]
+\caption{Image-level anomaly detection performance (best configuration)}
 \label{tab:anomaly_results}
-\begin{tabular}{@{}lc@{}}
-\toprule
+\begin{tabular}{p{3cm}p{3cm}}
+\hline\noalign{\smallskip}
 \textbf{Metric} & \textbf{Value} \\
-\midrule
+\noalign{\smallskip}\svhline\noalign{\smallskip}
 AUROC        & 0.756 \\
 AUPRC        & 0.851 \\
 F1-Score     & 0.784 \\
 Sensitivity  & 0.784 \\
 Specificity  & 0.564 \\
 Precision    & 0.783 \\
-\bottomrule
+\noalign{\smallskip}\hline\noalign{\smallskip}
 \end{tabular}
 \end{table}
 
 At the pixel level, using ground truth polygon tumor masks, our model achieves a pixel-level AUROC of \textbf{0.894}, indicating strong localization capability. Figure~\ref{fig:roc_curve} shows the pixel-level ROC curve, and Figure~\ref{fig:qualitative} presents a qualitative example comparing the original MRI, ground truth tumor mask, and the generated anomaly heatmap.
 
-\begin{figure}[H]
-\centering
+\begin{figure}[t]
 \includegraphics[width=0.65\textwidth]{../results/evaluation/roc_curve_pixel_level.png}
-\caption{Pixel-level ROC curve for anomaly localization (AUROC = 0.894). The model demonstrates strong ability to discriminate tumor pixels from healthy tissue based on reconstruction error.}
+\caption{Pixel-level ROC curve for anomaly localization (AUROC = 0.894). The model demonstrates strong ability to discriminate tumor pixels from healthy tissue based on reconstruction error}
 \label{fig:roc_curve}
 \end{figure}
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{../results/evaluation/qualitative_example_1.png}
-\caption{Qualitative anomaly detection example. Left to right: original brain MRI with tumor, ground truth tumor mask, healthy reconstruction, and anomaly heatmap generated by our diffusion-based reconstruction pipeline. High-intensity regions in the heatmap correspond to areas where the healthy reconstruction deviates from the original, successfully localizing the tumor.}
+\begin{figure}[t]
+\includegraphics[width=\textwidth]{../results/evaluation/qualitative_example_1.png}
+\caption{Qualitative anomaly detection example. Left to right: original brain MRI with tumor, ground truth tumor mask, healthy reconstruction, and anomaly heatmap generated by our diffusion-based reconstruction pipeline. High-intensity regions in the heatmap correspond to areas where the healthy reconstruction deviates from the original, successfully localizing the tumor}
 \label{fig:qualitative}
 \end{figure}
 
@@ -293,38 +284,36 @@ We also note that lowering the guidance scale to $w = 3.0$ (same checkpoint and 
 
 We conducted an extensive grid search across 120 configurations: 10 training checkpoints (50K--140K steps, in 10K increments) $\times$ 4 noise injection levels ($t_{\text{start}} \in \{150, 200, 250, 300\}$) $\times$ 3 guidance scales ($w \in \{3.0, 5.0, 7.5\}$). Table~\ref{tab:top_configs} presents the top 5 configurations ranked by AUROC.
 
-\begin{table}[H]
-\centering
-\caption{Top 5 hyperparameter configurations by image-level AUROC (grid search over 120 combinations).}
+\begin{table}[!t]
+\caption{Top 5 hyperparameter configurations by image-level AUROC (grid search over 120 combinations)}
 \label{tab:top_configs}
-\begin{tabular}{@{}cccccccc@{}}
-\toprule
+\begin{tabular}{p{1.8cm}p{1cm}p{0.8cm}p{1.2cm}p{0.8cm}p{1cm}p{1cm}}
+\hline\noalign{\smallskip}
 \textbf{Checkpoint} & $\boldsymbol{t_{\textbf{start}}}$ & $\boldsymbol{w}$ & \textbf{AUROC} & \textbf{F1} & \textbf{Sens.} & \textbf{Spec.} \\
-\midrule
+\noalign{\smallskip}\svhline\noalign{\smallskip}
 step\_100K & 150 & 7.5 & \textbf{0.756} & 0.784 & 0.784 & 0.564 \\
 step\_80K  & 200 & 7.5 & 0.755 & 0.754 & 0.711 & 0.649 \\
 step\_100K & 150 & 3.0 & 0.755 & \textbf{0.820} & \textbf{0.880} & 0.467 \\
 step\_140K & 150 & 3.0 & 0.755 & 0.785 & 0.784 & 0.573 \\
 step\_100K & 150 & 5.0 & 0.755 & 0.742 & 0.689 & 0.662 \\
-\bottomrule
+\noalign{\smallskip}\hline\noalign{\smallskip}
 \end{tabular}
 \end{table}
 
 \paragraph{Effect of Noise Injection Level ($t_{\text{start}}$).} The noise injection level emerges as the most critical hyperparameter. Table~\ref{tab:tstart_effect} shows performance at different $t_{\text{start}}$ values with the best checkpoint (step\_100K) and guidance scale ($w = 7.5$) held fixed. At $t_{\text{start}} = 150$, AUROC is maximized at 0.756. Higher values progressively degrade performance: at $t_{\text{start}} = 250$, AUROC drops to 0.739, and at $t_{\text{start}} = 400$, it falls to approximately 0.649. This confirms that excessive noising destroys healthy anatomical features along with pathology, while insufficient noising fails to remove the anomaly signal.
 
-\begin{table}[H]
-\centering
-\caption{Effect of noise injection level $t_{\text{start}}$ on anomaly detection (step\_100K, $w = 7.5$).}
+\begin{table}[!t]
+\caption{Effect of noise injection level $t_{\text{start}}$ on anomaly detection (step\_100K, $w = 7.5$)}
 \label{tab:tstart_effect}
-\begin{tabular}{@{}ccccc@{}}
-\toprule
+\begin{tabular}{p{1.5cm}p{1.5cm}p{1.5cm}p{2cm}p{2cm}}
+\hline\noalign{\smallskip}
 $\boldsymbol{t_{\textbf{start}}}$ & \textbf{AUROC} & \textbf{F1} & \textbf{Sensitivity} & \textbf{Specificity} \\
-\midrule
+\noalign{\smallskip}\svhline\noalign{\smallskip}
 150  & \textbf{0.756} & 0.784 & 0.784 & 0.564 \\
 200  & 0.749 & 0.767 & 0.738 & 0.627 \\
 250  & 0.739 & 0.793 & 0.811 & 0.529 \\
 400  & 0.649 & 0.539 & 0.402 & 0.818 \\
-\bottomrule
+\noalign{\smallskip}\hline\noalign{\smallskip}
 \end{tabular}
 \end{table}
 
@@ -337,19 +326,18 @@ $\boldsymbol{t_{\textbf{start}}}$ & \textbf{AUROC} & \textbf{F1} & \textbf{Sensi
 
 Table~\ref{tab:generation_metrics} presents the quantitative evaluation of 500 synthetic brain MRI images generated using checkpoint step\_100K with DDIM sampling (50 steps, $\eta = 0$, conditioned on healthy class).
 
-\begin{table}[H]
-\centering
-\caption{Synthetic image generation quality metrics (500 generated images vs.\ real healthy test images).}
+\begin{table}[!t]
+\caption{Synthetic image generation quality metrics (500 generated images vs.\ real healthy test images)}
 \label{tab:generation_metrics}
-\begin{tabular}{@{}lc@{}}
-\toprule
+\begin{tabular}{p{5cm}p{4cm}}
+\hline\noalign{\smallskip}
 \textbf{Metric} & \textbf{Value} \\
-\midrule
+\noalign{\smallskip}\svhline\noalign{\smallskip}
 FID $\downarrow$                      & 144.43 \\
 SSIM $\uparrow$                       & $0.129 \pm 0.085$ \\
 LPIPS $\downarrow$                    & $0.534 \pm 0.033$ \\
 Diversity (LPIPS) $\uparrow$          & $0.404 \pm 0.104$ \\
-\bottomrule
+\noalign{\smallskip}\hline\noalign{\smallskip}
 \end{tabular}
 \end{table}
 
@@ -360,17 +348,15 @@ The FID of 144.43 reflects moderate generation quality, contextualized by our sm
 
 To enhance interpretability, we provide two complementary explainability mechanisms. Figure~\ref{fig:attention_maps} visualizes self-attention weights from the U-Net's attention layers at resolutions $16 \times 16$ and $8 \times 8$ during denoising. The attention maps reveal that the model focuses on anatomically meaningful structures---ventricular boundaries, cortical folds, and tissue interfaces---providing evidence of learned brain anatomy representations. Figure~\ref{fig:denoising_trajectory} compares the denoising trajectory for a healthy and an anomalous brain MRI. For healthy inputs, reconstruction converges smoothly to the original; for anomalous inputs, the model progressively ``corrects'' the tumor region, replacing it with healthy-appearing tissue---the mechanism underlying our anomaly detection.
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{../results/explainability/attention_maps.png}
-\caption{Self-attention maps from the U-Net during denoising. The model attends to anatomically relevant structures, demonstrating learned spatial awareness of brain morphology.}
+\begin{figure}[t]
+\includegraphics[width=\textwidth]{../results/explainability/attention_maps.png}
+\caption{Self-attention maps from the U-Net during denoising. The model attends to anatomically relevant structures, demonstrating learned spatial awareness of brain morphology}
 \label{fig:attention_maps}
 \end{figure}
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{../results/explainability/denoising_trajectory_comparison.png}
-\caption{Denoising trajectory comparison between a healthy brain MRI (top) and a tumor-bearing MRI (bottom). The healthy-conditioned reconstruction progressively ``corrects'' the tumor region.}
+\begin{figure}[t]
+\includegraphics[width=\textwidth]{../results/explainability/denoising_trajectory_comparison.png}
+\caption{Denoising trajectory comparison between a healthy brain MRI (top) and a tumor-bearing MRI (bottom). The healthy-conditioned reconstruction progressively ``corrects'' the tumor region}
 \label{fig:denoising_trajectory}
 \end{figure}
 % ============================================================
@@ -392,7 +378,7 @@ To enhance interpretability, we provide two complementary explainability mechani
 \paragraph{Inference Efficiency.} With CFG and $S = 50$ DDIM steps, each anomaly detection pass requires $2S = 100$ U-Net forward evaluations. Operating in the $32 \times 32$ latent space rather than $256 \times 256$ pixel space reduces per-pass FLOPs by $\sim$$50\times$, and DDIM's $20\times$ step reduction over full DDPM sampling yields an overall $\sim$$1000\times$ speedup versus a na\"{i}ve pixel-space baseline. In practice, inference completes in $\sim$300--350~ms per image ($\sim$3~images/s) on an NVIDIA RTX 4060, with a total model footprint of $\sim$52M parameters (35M U-Net + 17M VAE).
 
 \paragraph{Limitations.} Several limitations should be acknowledged:
-\begin{itemize}[leftmargin=*]
+\begin{itemize}
   \item \textbf{2D processing}: Our model operates on individual 2D slices, ignoring volumetric context that could improve detection of spatially coherent pathologies.
   \item \textbf{Limited dataset}: The Brain Tumor Detection dataset contains approximately 3,000 images from a single source, limiting the diversity of brain anatomy and imaging conditions represented.
   \item \textbf{No demographic metadata}: The dataset provides no patient demographics, precluding analysis of potential performance disparities across populations.
@@ -417,14 +403,14 @@ We further contribute explainability mechanisms and discuss ethical consideratio
 % ============================================================
 % ACKNOWLEDGMENTS
 % ============================================================
-\section*{Acknowledgments}
-
+\begin{acknowledgement}
 The authors acknowledge the creators of the Brain Tumor Detection dataset on Kaggle for making their data publicly available, and the MONAI Consortium for their open-source medical imaging framework. All computations were performed on a consumer-grade NVIDIA RTX 4060 GPU, demonstrating the accessibility of latent diffusion methods for medical imaging research.
+\end{acknowledgement}
 
 % ============================================================
 % BIBLIOGRAPHY
 % ============================================================
-\bibliographystyle{unsrt}
+\bibliographystyle{spbasic}
 \bibliography{references}
 
 \end{document}
