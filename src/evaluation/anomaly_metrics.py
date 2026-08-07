@@ -15,6 +15,7 @@ from sklearn.metrics import (
     roc_auc_score, average_precision_score, roc_curve, precision_recall_curve,
 )
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 # Add project root to path
 project_root = Path(__file__).resolve().parents[2]
@@ -44,6 +45,7 @@ def compute_image_level_metrics(
 
     # Find optimal threshold (Youden's J statistic)
     fpr, tpr, thresholds = roc_curve(labels, anomaly_scores)
+    precision_curve, recall_curve, pr_thresholds = precision_recall_curve(labels, anomaly_scores)
     j_scores = tpr - fpr
     optimal_idx = np.argmax(j_scores)
     optimal_threshold = thresholds[optimal_idx]
@@ -77,6 +79,9 @@ def compute_image_level_metrics(
         "fpr": fpr,
         "tpr": tpr,
         "roc_thresholds": thresholds,
+        "precision_curve": precision_curve,
+        "recall_curve": recall_curve,
+        "pr_thresholds": pr_thresholds,
     }
 
 
@@ -217,6 +222,35 @@ def main():
         ddim_steps=args.ddim_steps,
     )
 
+    # Plot ROC curve
+    plt.figure(figsize=(8, 6))
+    plt.plot(results["metrics"]["fpr"], results["metrics"]["tpr"], color='darkorange', lw=2, label=f'ROC curve (AUROC = {results["metrics"]["auroc"]:.4f})')
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Image-Level Anomaly Detection ROC Curve')
+    plt.legend(loc="lower right")
+    plt.grid(True, alpha=0.3)
+    roc_path = output_dir / "roc_curve_image_level.png"
+    plt.savefig(roc_path, dpi=300, bbox_inches='tight')
+    plt.close()
+
+    # Plot PR curve
+    plt.figure(figsize=(8, 6))
+    plt.plot(results["metrics"]["recall_curve"], results["metrics"]["precision_curve"], color='blue', lw=2, label=f'PR curve (AUPRC = {results["metrics"]["auprc"]:.4f})')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.title('Image-Level Anomaly Detection Precision-Recall Curve')
+    plt.legend(loc="lower left")
+    plt.grid(True, alpha=0.3)
+    pr_path = output_dir / "pr_curve_image_level.png"
+    plt.savefig(pr_path, dpi=300, bbox_inches='tight')
+    plt.close()
+
     # Save metrics
     import json
     metrics_to_save = {
@@ -227,6 +261,8 @@ def main():
         json.dump(metrics_to_save, f, indent=2)
 
     print(f"\nMetrics saved to {output_dir / 'anomaly_metrics.json'}")
+    print(f"ROC curve saved to {roc_path}")
+    print(f"PR curve saved to {pr_path}")
 
 
 if __name__ == "__main__":

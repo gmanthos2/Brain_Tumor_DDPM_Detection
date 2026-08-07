@@ -111,23 +111,17 @@ def main():
         # Generate Ground Truth Mask (1 for tumor, 0 for background)
         gt_mask = create_mask_from_regions(regions, orig_size, target_size=(256, 256))
         
-        # Find processed PNG image
-        png_filename = Path(filename).with_suffix('.png').name
-        processed_path = processed_dir / png_filename
-        if not processed_path.exists():
-            continue
-            
-        # Generate Anomaly Map from DDPM using processed image
+        # Generate Anomaly Map from DDPM using original image
         try:
             result = detector.detect(
-                str(processed_path),
+                str(orig_img_path),
                 t_start=args.t_start,
                 guidance_scale=args.guidance_scale,
                 ddim_steps=args.ddim_steps
             )
             anomaly_map = result["anomaly_map"] # (256, 256) numpy array
         except Exception as e:
-            logger.warning(f"Detection failed for {processed_path}: {e}")
+            logger.warning(f"Detection failed for {orig_img_path}: {e}")
             continue
             
         all_masks.append(gt_mask.flatten())

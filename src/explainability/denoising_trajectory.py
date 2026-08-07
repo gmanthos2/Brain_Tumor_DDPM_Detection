@@ -88,16 +88,42 @@ def compare_trajectories(
 ):
     """Compare denoising trajectories for healthy vs anomalous input."""
     n = min(len(traj_healthy), len(traj_anomalous))
-    fig, axes = plt.subplots(2, n, figsize=(4 * n, 8))
+    cols = min(n, 4)
+    rows_per_type = (n + cols - 1) // cols
+    total_rows = rows_per_type * 2
+    
+    fig, axes = plt.subplots(total_rows, cols, figsize=(4 * cols, 4 * total_rows))
+    
+    for i in range(total_rows):
+        for j in range(cols):
+            axes[i, j].axis("off")
+            
     for i in range(n):
-        axes[0, i].imshow(traj_healthy[i][1][0].squeeze().numpy(), cmap="gray")
-        axes[0, i].set_title(f"t={traj_healthy[i][0]}")
-        axes[0, i].axis("off")
-        axes[1, i].imshow(traj_anomalous[i][1][0].squeeze().numpy(), cmap="gray")
-        axes[1, i].set_title(f"t={traj_anomalous[i][0]}")
-        axes[1, i].axis("off")
-    axes[0, 0].set_ylabel("Healthy", fontsize=14)
-    axes[1, 0].set_ylabel("Anomalous", fontsize=14)
+        r = i // cols
+        c = i % cols
+        axes[r, c].imshow(traj_healthy[i][1][0].squeeze().numpy(), cmap="gray")
+        axes[r, c].set_title(f"t={traj_healthy[i][0]}")
+        axes[r, c].axis("on")
+        axes[r, c].set_xticks([])
+        axes[r, c].set_yticks([])
+        for spine in axes[r, c].spines.values():
+            spine.set_visible(False)
+        if c == 0 and r == 0:
+            axes[r, c].set_ylabel("Healthy Brain", fontsize=14, fontweight='bold', labelpad=20)
+        
+    for i in range(n):
+        r = rows_per_type + (i // cols)
+        c = i % cols
+        axes[r, c].imshow(traj_anomalous[i][1][0].squeeze().numpy(), cmap="gray")
+        axes[r, c].set_title(f"t={traj_anomalous[i][0]}")
+        axes[r, c].axis("on")
+        axes[r, c].set_xticks([])
+        axes[r, c].set_yticks([])
+        for spine in axes[r, c].spines.values():
+            spine.set_visible(False)
+        if c == 0 and r == rows_per_type:
+            axes[r, c].set_ylabel("Anomalous Brain", fontsize=14, fontweight='bold', labelpad=20)
+            
     fig.suptitle("Denoising Trajectory Comparison", fontsize=16)
     plt.tight_layout()
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
@@ -116,7 +142,7 @@ def main():
     parser.add_argument("--ddpm-config", type=str, default="configs/ddpm_config.yaml")
     parser.add_argument("--vae-checkpoint", type=str, default="checkpoints/vae/best.pt")
     parser.add_argument("--ddpm-checkpoint", type=str, default="checkpoints/ddpm/step_100000.pt")
-    parser.add_argument("--t-start", type=int, default=150)
+    parser.add_argument("--t-start", type=int, default=500)
     parser.add_argument("--guidance-scale", type=float, default=7.5)
     parser.add_argument("--capture-every", type=int, default=1, help="Capture step frequency (1=all steps)")
     args = parser.parse_args()
@@ -163,6 +189,11 @@ def main():
     )
 
     output_path = ensure_dir(project_root / Path(args.output).parent) / Path(args.output).name
+    
+    target_timesteps = [500, 400, 200, 0]
+    traj_healthy = [item for item in traj_healthy if item[0] in target_timesteps]
+    traj_anomalous = [item for item in traj_anomalous if item[0] in target_timesteps]
+    
     print(f"Plotting and saving to {output_path}...")
     compare_trajectories(traj_healthy, traj_anomalous, str(output_path))
     print("✓ Done!")

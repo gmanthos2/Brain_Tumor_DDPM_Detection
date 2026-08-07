@@ -86,13 +86,23 @@ def visualize_attention(
         query_point: Optional (y, x) point to show attention from
     """
     num_layers = len(attention_data)
-    fig, axes = plt.subplots(1, num_layers + 1, figsize=(5 * (num_layers + 1), 5))
+    total_images = num_layers + 1
+    cols = 5
+    rows = (total_images + cols - 1) // cols
+    
+    fig, axes = plt.subplots(rows, cols, figsize=(5 * cols, 5 * rows))
+    axes_flat = axes.flatten()
 
-    axes[0].imshow(original_image, cmap="gray")
-    axes[0].set_title("Original")
-    axes[0].axis("off")
+    for ax in axes_flat:
+        ax.axis("off")
+
+    axes_flat[0].imshow(original_image, cmap="gray")
+    axes_flat[0].set_title("Original")
 
     for i, (name, data) in enumerate(attention_data.items()):
+        if i + 1 >= len(axes_flat):
+            break
+            
         H, W = data["spatial_size"]
         attn = data["weights"] / data["count"]
 
@@ -112,11 +122,10 @@ def visualize_attention(
         scale = original_image.shape[0] / H
         attn_map = zoom(attn_map, scale, order=1)
 
-        axes[i + 1].imshow(original_image, cmap="gray", alpha=0.5)
-        axes[i + 1].imshow(attn_map, cmap="hot", alpha=0.5)
+        axes_flat[i + 1].imshow(original_image, cmap="gray", alpha=0.5)
+        axes_flat[i + 1].imshow(attn_map, cmap="hot", alpha=0.5)
         short_name = name.split(".")[-2] if "." in name else name
-        axes[i + 1].set_title(f"Attention: {short_name}")
-        axes[i + 1].axis("off")
+        axes_flat[i + 1].set_title(f"Attention: {short_name}")
 
     plt.tight_layout()
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
