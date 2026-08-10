@@ -1,14 +1,14 @@
 {
-  "auroc": 0.6978765432098766,
-  "auprc": 0.8238225414853233,
-  "optimal_threshold": 0.30829548835754395,
-  "accuracy": 0.5614814814814815,
-  "sensitivity": 0.4111111111111111,
-  "specificity": 0.8622222222222222,
-  "precision": 0.8564814814814815,
-  "f1_score": 0.5555555555555556,
-  "true_positives": 185,
-  "false_positives": 31,
-  "false_negatives": 265,
-  "true_negatives": 194
+  "auroc": 0.7577679012345679,
+  "auprc": 0.8528288167732988,
+  "optimal_threshold": 0.17827966809272766,
+  "accuracy": 0.6814814814814815,
+  "sensitivity": 0.6933333333333334,
+  "specificity": 0.6577777777777778,
+  "precision": 0.8020565552699229,
+  "f1_score": 0.7437425506555423,
+  "true_positives": 312,
+  "false_positives": 77,
+  "false_negatives": 138,
+  "true_negatives": 148
 }
