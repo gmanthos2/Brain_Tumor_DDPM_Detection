@@ -133,14 +133,14 @@ Normalization is applied before DDPM training; denormalization after DDIM sampli
 
 The DDPM operates in the normalized latent space using a U-Net~\cite{ronneberger2015u} for noise prediction on $32 \times 32 \times 4$ tensors.
 
-\paragraph{Architecture and Conditioning.} The U-Net uses base channel width 128 with multipliers $[1, 2, 4, 4]$, yielding feature maps of $[128, 256, 512, 512]$ across four resolution levels ($32 \rightarrow 16 \rightarrow 8 \rightarrow 4$). Each level has 2~residual blocks with GroupNorm and SiLU. Multi-head self-attention~\cite{vaswani2017attention} (4~heads) is applied at resolutions $16$ and $8$. A middle block with residual--attention--residual structure processes the $4 \times 4$ bottleneck. Timestep conditioning uses sinusoidal embeddings projected through a two-layer MLP. Class conditioning employs a learned embedding table with 3~entries: healthy (0), anomalous (1), and null ($\varnothing$). Time and class embeddings are summed and injected via additive conditioning.
+\paragraph{Architecture and Conditioning.} The U-Net uses base channel width 128 with multipliers $[1, 2, 4, 4]$, yielding feature maps of $[128, 256, 512, 512]$ across four resolution levels ($32 \rightarrow 16 \rightarrow 8 \rightarrow 4$). Each level has 2~residual blocks with GroupNorm and SiLU. Multi-head self-attention~\cite{vaswani2017attention} (4~heads) is applied at resolutions $16$ and $8$. A middle block with residual--attention--residual structure processes the $4 \times 4$ bottleneck. Timestep conditioning uses sinusoidal embeddings projected through a two-layer MLP. Class conditioning employs a learned embedding table with 3~entries: healthy (0), anomalous (1), and null ($\varnothing$). Time and class embeddings are summed and injected via additive conditioning. Because the model is trained exclusively on healthy images (Section~\ref{sec:dataset}), only the healthy and null embeddings receive gradient updates; the anomalous embedding remains at its random initialization and is never used at inference.
 
 \paragraph{Schedule and Training.} A linear noise schedule with $\beta_{\text{start}} = 10^{-4}$, $\beta_{\text{end}} = 0.02$ over $T = 1000$ timesteps is used. The model is trained for 200K steps (batch size 32) with AdamW (lr $2 \times 10^{-4}$, weight decay 0.01), gradient clipping at norm 1.0, and mixed precision. An EMA~\cite{polyak1992acceleration} of weights (decay 0.9999) is used for all inference. Training loss converged to $\approx$0.025--0.035. Gradient checkpointing is enabled to fit within 8~GB VRAM.
 
 \subsection{Classifier-Free Guidance}
 \label{sec:cfg}
 
-During training, class labels are randomly replaced with $\varnothing$ with probability $p = 0.1$. At inference, the guided prediction follows Equation~\ref{eq:cfg}, where $w$ controls conditioning strength.
+During training, class labels are randomly replaced with $\varnothing$ with probability $p = 0.1$, so the model learns both a conditional prediction $\boldsymbol{\epsilon}_\theta(\mathbf{z}_t, t, c{=}\text{healthy})$ and an unconditional prediction $\boldsymbol{\epsilon}_\theta(\mathbf{z}_t, t, \varnothing)$. Because training uses only healthy labels, the conditional and unconditional branches differ solely through the presence or absence of the healthy class embedding (dropped with $p = 0.1$). At inference, the guided prediction follows Equation~\ref{eq:cfg}, where $w$ controls the degree to which the healthy class embedding steers the reconstruction away from the unconditional estimate. In practice, because the unconditional branch has seen 90\% healthy-conditioned and 10\% null-conditioned examples---all from the same healthy data distribution---the gap between conditional and unconditional noise estimates is small, which limits the practical effect of $w$ on discrimination (see Section~\ref{sec:ablation}).
 
 \subsection{Anomaly Detection Pipeline}
 \label{sec:anomaly_pipeline}
@@ -183,7 +183,7 @@ For generation, full DDIM sampling starts from pure Gaussian noise $\mathbf{z}_T
 \subsection{Dataset}
 \label{sec:dataset}
 
-We use the Brain Tumor Detection dataset~\cite{bhuvaji2020brain} from Kaggle, comprising $\sim$1,500 healthy and $\sim$1,500 tumor-bearing 2D brain MRI slices. Ground truth tumor annotations are provided as VIA polygon masks in JSON format. All images are preprocessed to $256 \times 256$ grayscale, normalized to $[-1, 1]$, and split into training (70\%), validation (15\%), and test (15\%) sets. The test set contains 225 healthy and 450 anomalous images. The DDPM is trained \textit{exclusively} on healthy images, following the unsupervised paradigm.
+We use the Brain Tumor Detection dataset~\cite{bhuvaji2020brain} from Kaggle, comprising $\sim$1,500 healthy and $\sim$1,500 tumor-bearing 2D brain MRI slices. Ground truth tumor annotations are provided as VIA polygon masks in JSON format. All images are preprocessed to $256 \times 256$ grayscale and normalized to $[-1, 1]$. Because the DDPM is trained \textit{exclusively} on healthy images following the unsupervised paradigm, the dataset split of 70\% training, 15\% validation, and 15\% testing is applied solely to the healthy images. To form the final test set for evaluation, the 225 healthy test images are combined with 450 of the unused anomalous images.
 
 \subsection{Implementation Details}
 \label{sec:implementation}
@@ -267,7 +267,7 @@ Lowering the guidance scale to $w = 3.0$ (same checkpoint and $t_{\text{start}}$
 \subsection{Hyperparameter Ablation Study}
 \label{sec:grid_search}
 
-We searched 120 configurations: 10 checkpoints (50K--140K steps) $\times$ 4 noise levels ($t_{\text{start}} \in \{150, 200, 250, 300\}$) $\times$ 3 guidance scales ($w \in \{3.0, 5.0, 7.5\}$). Table~\ref{tab:top_configs} presents the top 5 configurations.
+We searched 120 configurations: 10 checkpoints (50K--140K steps) $\times$ 4 noise levels ($t_{\text{start}} \in \{150, 200, 250, 400\}$) $\times$ 3 guidance scales ($w \in \{3.0, 5.0, 7.5\}$). Table~\ref{tab:top_configs} presents the top 5 configurations.
 
 \begin{table}[!t]
 \caption{Top 5 hyperparameter configurations by image-level AUROC (grid search over 120 combinations)}
@@ -302,7 +302,7 @@ $\boldsymbol{t_{\textbf{start}}}$ & \textbf{AUROC} & \textbf{F1} & \textbf{Sensi
 \end{tabular}
 \end{table}
 
-\paragraph{Effect of Guidance Scale ($w$).} AUROC remains stable across guidance values (varying $<$0.002), but $w$ modulates the sensitivity--specificity trade-off. At $w = 3.0$, sensitivity reaches 0.880 with specificity 0.467; at $w = 7.5$, the balance shifts to 0.784/0.564. Stronger guidance produces more conservative reconstructions, reducing false positives.
+\paragraph{Effect of Guidance Scale ($w$).} AUROC remains stable across guidance values (varying $<$0.002). This near-invariance is expected: because training uses only healthy labels, the conditional and unconditional noise estimates differ only through the dropout of the healthy class embedding ($p = 0.1$), leaving a small residual for $w$ to amplify. Nevertheless, $w$ still modulates the sensitivity--specificity trade-off. At $w = 3.0$, sensitivity reaches 0.880 with specificity 0.467; at $w = 7.5$, the balance shifts to 0.784/0.564. Stronger guidance produces slightly more ``canonical'' healthy reconstructions, which shifts the anomaly score distribution and the optimal threshold, reducing false positives at the expense of missed detections.
 
 \paragraph{Effect of Checkpoint Maturity.} Checkpoint 100K consistently produces the best AUROC. Earlier checkpoints (50K--90K) show slightly lower AUROC (incomplete convergence); later checkpoints (110K--140K) show comparable but marginally reduced performance, suggesting mild overfitting.
 
@@ -355,7 +355,7 @@ Figure~\ref{fig:attention_maps} visualizes self-attention weights from the U-Net
 
 \paragraph{Critical Role of $t_{\text{start}}$.} The ablation study identifies $t_{\text{start}}$ as the dominant factor in detection performance. Sufficient noise must destroy the anomaly signal, but excessive noise also destroys healthy features, causing hallucinated anatomy and false positives. Our optimal $t_{\text{start}} = 150$ ($T = 1000$) balances these objectives, consistent with findings in AnoDDPM~\cite{wyatt2022anoddpm}.
 
-\paragraph{Guidance Scale as a Clinical Tuning Knob.} The guidance scale $w$ provides a sensitivity--specificity trade-off with minimal AUROC impact. At $w = 3.0$, the model achieves 88\% sensitivity at the cost of more false positives; at $w = 7.5$, the balance shifts toward specificity. This tunability is valuable for clinical deployment where cost asymmetries between missed tumors and false alarms vary by application.
+\paragraph{Guidance Scale as a Clinical Tuning Knob.} As noted in Section~\ref{sec:cfg}, single-class training means CFG interpolates between two nearly identical noise estimates---conditional on the healthy embedding versus the unconditional null---so AUROC is largely unaffected by $w$. The guidance scale does, however, modulate the sensitivity--specificity operating point: at $w = 3.0$, the model achieves 88\% sensitivity at the cost of more false positives; at $w = 7.5$, the balance shifts toward specificity. This tunability is valuable for clinical deployment where cost asymmetries between missed tumors and false alarms vary by application.
 
 \paragraph{Generation Quality and Comparison.} The FID of 144.43 should be interpreted considering the small training set ($\sim$1,500 grayscale images) and ImageNet-calibrated metrics. Our image-level AUROC of 0.756 falls within ranges reported by comparable methods: AnoDDPM~\cite{wyatt2022anoddpm} achieves 0.70--0.83 and Wolleb et al.~\cite{wolleb2022diffusion} report 0.74--0.86. Our pixel-level AUROC of 0.894 is competitive despite operating at coarse latent resolution ($32 \times 32$) upsampled to $256 \times 256$.
 
