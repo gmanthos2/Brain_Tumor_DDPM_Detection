@@ -24,6 +24,8 @@
 \usepackage[varvw]{newtxmath}
 
 \usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algorithmic}
 \usepackage{hyperref}
 
 % -- Fix hyperref bookmark levels for svmult custom TOC entries --
@@ -55,13 +57,10 @@
   \ifx\chpbibl\undefined
     \def\bibsection{\section*{\refname}\ifx\sectionmark\@gobble\else
         \markright{\refname}\fi
-        \addcontentsline{toc}{section}{\refname}%
         \csname biblst@rthook\endcsname\par}%
   \fi}
 \makeatother
 
-\usepackage{algorithm}
-\usepackage{algorithmic}
 
 \makeindex
 
@@ -377,7 +376,7 @@ Figure~\ref{fig:attention_maps} visualizes self-attention weights from the U-Net
 
 \begin{figure}[t]
 \includegraphics[width=\textwidth]{../results/explainability/denoising_trajectory_comparison.png}
-\caption{Denoising trajectory comparison between a healthy brain MRI (top) and a tumor-bearing MRI (bottom). The healthy-conditioned reconstruction progressively ``corrects'' the tumor region}
+\caption{Denoising trajectory comparison between a healthy brain MRI (top) and a tumor-bearing MRI (bottom). The healthy-conditioned reconstruction progressively ``corrects'' the tumor region. Note that while the anomaly detection pipeline uses $t_{\text{start}} = 150$ to preserve healthy anatomy, this visualization initializes the trajectory at $t = 500$ to more clearly demonstrate the pronounced denoising effect and the model's structural correction capabilities over a longer schedule}
 \label{fig:denoising_trajectory}
 \end{figure}
 
