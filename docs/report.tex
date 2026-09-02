@@ -9,7 +9,7 @@
 \documentclass[graybox]{svmult}
 
 % ---- Required packages (Springer SVMult recommended set) ----
-% \usepackage{type1cm}  % only needed if CM fonts are not scalable on your system
+\usepackage{fix-cm}     % allow CM fonts at arbitrary sizes (fixes size substitution warnings)
 \usepackage{makeidx}
 \usepackage{graphicx}
 \usepackage{multicol}
@@ -25,12 +25,41 @@
 
 \usepackage{booktabs}
 \usepackage{hyperref}
+
+% -- Fix hyperref bookmark levels for svmult custom TOC entries --
+\makeatletter
+\providecommand*{\toclevel@title}{0}
+\providecommand*{\toclevel@author}{99}
+\providecommand*{\toclevel@titlech}{-1}
+\providecommand*{\toclevel@authorch}{0}
+\providecommand*{\toclevel@mtchap}{2}
+\makeatother
+
+% -- Neutralize svmult macros inside PDF bookmark strings --
 \pdfstringdefDisableCommands{%
   \def\inst#1{}%
   \def\email#1{<#1>}%
   \def\at{}%
   \def\and{, }%
+  \def\unskip{}%
+  \def\fnmsep{}%
 }
+
+% -- Fix missing OMS font shape for newtxtext --
+\DeclareFontFamily{OMS}{ntxtlf}{\skewchar\font48}
+\DeclareFontShape{OMS}{ntxtlf}{m}{n}{<->ssub*cmsy/m/n}{}
+
+% -- Remove duplicate "References" bookmark from svmult's bibsection --
+\makeatletter
+\AtBeginDocument{%
+  \ifx\chpbibl\undefined
+    \def\bibsection{\section*{\refname}\ifx\sectionmark\@gobble\else
+        \markright{\refname}\fi
+        \addcontentsline{toc}{section}{\refname}%
+        \csname biblst@rthook\endcsname\par}%
+  \fi}
+\makeatother
+
 \usepackage{algorithm}
 \usepackage{algorithmic}
 
@@ -274,6 +303,7 @@ Lowering the guidance scale to $w = 3.0$ (same checkpoint and $t_{\text{start}}$
 
 \subsection{Hyperparameter Ablation Study}
 \label{sec:grid_search}
+\label{sec:ablation}
 
 We searched 120 configurations: 10 checkpoints (50K--140K steps) $\times$ 4 noise levels ($t_{\text{start}} \in \{150, 200, 250, 400\}$) $\times$ 3 guidance scales ($w \in \{3.0, 5.0, 7.5\}$). Table~\ref{tab:top_configs} presents the top 5 configurations.
 
