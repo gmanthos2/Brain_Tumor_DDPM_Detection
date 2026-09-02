@@ -25,6 +25,12 @@
 
 \usepackage{booktabs}
 \usepackage{hyperref}
+\pdfstringdefDisableCommands{%
+  \def\inst#1{}%
+  \def\email#1{<#1>}%
+  \def\at{}%
+  \def\and{, }%
+}
 \usepackage{algorithm}
 \usepackage{algorithmic}
 
@@ -39,16 +45,18 @@
 % your contribution title if the original one is too long
 \titlerunning{Latent Diffusion Models for Brain MRI Anomaly Detection}
 
-\author{Georgios Manthos}
+\author{Georgios Manthos\inst{1,2} \and Ilias Maglogiannis\inst{1}}
 % Use \authorrunning{Short Title} for an abbreviated version of
 % your contribution title if the original one is too long
-\institute{Georgios Manthos \at Department of Digital Systems, University of Piraeus, Greece \and Institute of Information Technology, National Center for Scientific Research Demokritos, Greece, \email{gmanthos2@gmail.com}}
+\institute{Department of Digital Systems, University of Piraeus, Greece\\
+\email{gmanthos2@gmail.com}, \email{imaglo@unipi.gr}
+\and Institute of Information Technology, National Center for Scientific Research Demokritos, Greece}
 %
 \maketitle
 
-\abstract*{We present a two-stage latent diffusion framework for unsupervised brain tumor detection and synthetic medical image generation. A Variational Autoencoder compresses $256 \times 256$ grayscale brain MRI slices into a $32 \times 32 \times 4$ latent space, where a class-conditional DDPM learns the distribution of healthy brain anatomy. For anomaly detection, input images are partially noised and reconstructed via DDIM sampling with Classifier-Free Guidance (CFG) conditioned on the healthy class; pixel-wise reconstruction errors localize pathological regions. An ablation study across 120 configurations evaluates the effects of checkpoint maturity, noise level ($t_\text{start}$), and guidance scale. Our best configuration achieves an image-level AUROC of 0.756 and a pixel-level AUROC of 0.894. Synthetic image quality is assessed via FID (144.43), SSIM, and LPIPS. We also provide model explainability through attention map visualization and denoising trajectory analysis.}
+\abstract*{We present a two-stage latent diffusion framework for unsupervised brain tumor detection and synthetic medical image generation. A Variational Autoencoder compresses $256 \times 256$ grayscale brain MRI slices into a $32 \times 32 \times 4$ latent space, where a class-conditional DDPM learns the distribution of healthy brain anatomy. For anomaly detection, input images are partially noised and reconstructed via DDIM sampling with Classifier-Free Guidance (CFG) conditioned on the healthy class; pixel-wise reconstruction errors localize pathological regions. An ablation study across 120 configurations evaluates the effects of checkpoint maturity, noise level ($t_\text{start}$), and guidance scale. Our best configuration achieves an image-level AUROC of 0.756 and a pixel-level AUROC of 0.894. Synthetic image quality is assessed via FID (144.43) and intra-set diversity. We also provide model explainability through attention map visualization and denoising trajectory analysis.}
 
-\abstract{We present a two-stage latent diffusion framework for unsupervised brain tumor detection and synthetic medical image generation. A Variational Autoencoder compresses $256 \times 256$ grayscale brain MRI slices into a $32 \times 32 \times 4$ latent space, where a class-conditional DDPM learns the distribution of healthy brain anatomy. For anomaly detection, input images are partially noised and reconstructed via DDIM sampling with Classifier-Free Guidance (CFG) conditioned on the healthy class; pixel-wise reconstruction errors localize pathological regions. An ablation study across 120 configurations evaluates the effects of checkpoint maturity, noise level ($t_\text{start}$), and guidance scale. Our best configuration achieves an image-level AUROC of 0.756 and a pixel-level AUROC of 0.894. Synthetic image quality is assessed via FID (144.43), SSIM, and LPIPS. We also provide model explainability through attention map visualization and denoising trajectory analysis.\newline\indent
+\abstract{We present a two-stage latent diffusion framework for unsupervised brain tumor detection and synthetic medical image generation. A Variational Autoencoder compresses $256 \times 256$ grayscale brain MRI slices into a $32 \times 32 \times 4$ latent space, where a class-conditional DDPM learns the distribution of healthy brain anatomy. For anomaly detection, input images are partially noised and reconstructed via DDIM sampling with Classifier-Free Guidance (CFG) conditioned on the healthy class; pixel-wise reconstruction errors localize pathological regions. An ablation study across 120 configurations evaluates the effects of checkpoint maturity, noise level ($t_\text{start}$), and guidance scale. Our best configuration achieves an image-level AUROC of 0.756 and a pixel-level AUROC of 0.894. Synthetic image quality is assessed via FID (144.43) and intra-set diversity. We also provide model explainability through attention map visualization and denoising trajectory analysis.\newline\indent
 \textbf{Keywords:} diffusion models, anomaly detection, brain MRI, latent diffusion, synthetic medical images, DDPM, variational autoencoder, ethical AI, explainability}
 
 % ============================================================
@@ -66,7 +74,7 @@ In this work, we present a complete latent diffusion pipeline for brain MRI anal
 \begin{enumerate}
   \item A two-stage latent diffusion architecture combining a MONAI-based VAE with a class-conditional U-Net DDPM, using CFG and DDIM sampling.
   \item A systematic ablation study across 120 configurations---10~checkpoints, 4~noise levels, and 3~guidance scales---characterizing detection sensitivity to each factor.
-  \item Quantitative evaluation of both anomaly detection (image- and pixel-level AUROC) and synthetic image quality (FID, SSIM, LPIPS).
+  \item Quantitative evaluation of both anomaly detection (image- and pixel-level AUROC) and synthetic image quality (FID, intra-set diversity).
   \item Explainability via self-attention maps and denoising trajectories, plus a discussion of ethical considerations.
 \end{enumerate}
 
@@ -218,7 +226,7 @@ Mixed precision     & Yes & Yes \\
 
 \paragraph{Anomaly Detection.} At the image level, each image receives a scalar anomaly score (mean raw L1 error); we report AUROC, AUPRC, F1, sensitivity, and specificity. At the pixel level, we compute AUROC using ground truth polygon masks.
 
-\paragraph{Synthetic Image Quality.} We assess generation quality using FID~\cite{heusel2017gans}, SSIM~\cite{wang2004image}, LPIPS~\cite{zhang2018perceptual}, and intra-set diversity (LPIPS between generated pairs), computed over 200 randomly sampled cross-distribution pairs.
+\paragraph{Synthetic Image Quality.} We assess generation quality using FID~\cite{heusel2017gans} and intra-set diversity (pairwise LPIPS~\cite{zhang2018perceptual} between generated images). For FID, grayscale images are channel-replicated to three-channel pseudo-RGB before being passed through an ImageNet-pretrained Inception-v3 network; features are extracted from the final pooling layer and the Fr\'echet distance is computed between real and generated feature distributions. We note that ImageNet-calibrated features are not ideal for single-channel medical imagery, so the absolute FID value should be interpreted with caution.
 
 % ============================================================
 % 5. RESULTS
@@ -319,14 +327,12 @@ Table~\ref{tab:generation_metrics} evaluates 500 synthetic images generated with
 \textbf{Metric} & \textbf{Value} \\
 \noalign{\smallskip}\svhline\noalign{\smallskip}
 FID $\downarrow$                      & 144.43 \\
-SSIM $\uparrow$                       & $0.129 \pm 0.085$ \\
-LPIPS $\downarrow$                    & $0.534 \pm 0.033$ \\
 Diversity (LPIPS) $\uparrow$          & $0.404 \pm 0.104$ \\
 \noalign{\smallskip}\hline\noalign{\smallskip}
 \end{tabular}
 \end{table}
 
-The FID of 144.43 reflects moderate quality, contextualized by our small training set ($\sim$1,500 images) and limited calibration of ImageNet-based FID for grayscale medical imagery. The diversity score (LPIPS = 0.404) confirms varied generation without mode collapse.
+The FID of 144.43 reflects moderate distributional quality. As discussed in Section~\ref{sec:metrics}, this value should be interpreted with caution: the Inception features are calibrated on ImageNet, not on grayscale medical images, and our training set is small ($\sim$1,500 images). The intra-set diversity score (LPIPS = 0.404) confirms that the generator produces varied outputs without mode collapse.
 
 \subsection{Explainability Analysis}
 \label{sec:explainability_results}
@@ -357,7 +363,7 @@ Figure~\ref{fig:attention_maps} visualizes self-attention weights from the U-Net
 
 \paragraph{Guidance Scale as a Clinical Tuning Knob.} As noted in Section~\ref{sec:cfg}, single-class training means CFG interpolates between two nearly identical noise estimates---conditional on the healthy embedding versus the unconditional null---so AUROC is largely unaffected by $w$. The guidance scale does, however, modulate the sensitivity--specificity operating point: at $w = 3.0$, the model achieves 88\% sensitivity at the cost of more false positives; at $w = 7.5$, the balance shifts toward specificity. This tunability is valuable for clinical deployment where cost asymmetries between missed tumors and false alarms vary by application.
 
-\paragraph{Generation Quality and Comparison.} The FID of 144.43 should be interpreted considering the small training set ($\sim$1,500 grayscale images) and ImageNet-calibrated metrics. Our image-level AUROC of 0.756 falls within ranges reported by comparable methods: AnoDDPM~\cite{wyatt2022anoddpm} achieves 0.70--0.83 and Wolleb et al.~\cite{wolleb2022diffusion} report 0.74--0.86. Our pixel-level AUROC of 0.894 is competitive despite operating at coarse latent resolution ($32 \times 32$) upsampled to $256 \times 256$.
+\paragraph{Generation Quality and Comparison.} The FID of 144.43 should be interpreted with the caveats discussed in Section~\ref{sec:metrics}: the Inception network was trained on ImageNet and receives channel-replicated grayscale inputs, so the absolute value is not directly comparable to FID scores reported on natural-image benchmarks. Our image-level AUROC of 0.756 falls within ranges reported by comparable methods: AnoDDPM~\cite{wyatt2022anoddpm} achieves 0.70--0.83 and Wolleb et al.~\cite{wolleb2022diffusion} report 0.74--0.86. Our pixel-level AUROC of 0.894 is competitive despite operating at coarse latent resolution ($32 \times 32$) upsampled to $256 \times 256$.
 
 \paragraph{Inference Efficiency.} With CFG and $S = 50$ DDIM steps, each pass requires $2S = 100$ U-Net evaluations. Operating in the $32 \times 32$ latent space reduces FLOPs by $\sim$$50\times$ versus pixel space, and DDIM's $20\times$ step reduction yields $\sim$$1000\times$ overall speedup. Inference completes in $\sim$300--350~ms per image on an RTX 4060, with $\sim$52M total parameters (35M U-Net + 17M VAE).
 
@@ -377,7 +383,7 @@ We have presented a two-stage latent diffusion pipeline combining a MONAI-based 
 % ACKNOWLEDGMENTS
 % ============================================================
 \begin{acknowledgement}
-The authors acknowledge the creators of the Brain Tumor Detection dataset on Kaggle for making their data publicly available, and the MONAI Consortium for their open-source medical imaging framework. All computations were performed on a consumer-grade NVIDIA RTX 4060 GPU, demonstrating the accessibility of latent diffusion methods for medical imaging research.
+This work has been also partly supported by the University of Piraeus Research Center.
 \end{acknowledgement}
 
 % ============================================================
