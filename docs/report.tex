@@ -93,7 +93,7 @@
 \section{Introduction}
 \label{sec:introduction}
 
-Medical imaging is central to diagnosing neurological disorders, with MRI serving as the primary modality for detecting structural brain abnormalities~\cite{baur2021autoencoders}. However, automated analysis faces persistent challenges: annotated datasets are scarce, class distributions are heavily imbalanced, and privacy regulations constrain data sharing~\cite{yi2019generative}. These limitations motivate \textit{unsupervised} anomaly detection, which learns normality exclusively from healthy data and identifies pathology as deviations from this distribution~\cite{baur2021autoencoders, schlegl2019f}.
+Medical imaging is central to diagnosing neurological disorders, with MRI serving as the primary modality for detecting structural brain abnormalities~\cite{baur2021autoencoders}. Deep learning has shown broad applicability in clinical image analysis~\cite{amerikanos2022image}, yet automated analysis faces persistent challenges: annotated datasets are scarce, class distributions are heavily imbalanced, and privacy regulations constrain data sharing~\cite{yi2019generative}. These limitations motivate \textit{unsupervised} anomaly detection, which learns normality exclusively from healthy data and identifies pathology as deviations from this distribution~\cite{baur2021autoencoders, schlegl2019f}.
 
 Denoising Diffusion Probabilistic Models (DDPMs)~\cite{ho2020denoising} have demonstrated superior sample quality and training stability over GANs~\cite{goodfellow2014generative, dhariwal2021diffusion}. Latent Diffusion Models (LDMs)~\cite{rombach2022high} further reduce computational costs by operating in a compressed latent space. For medical anomaly detection, diffusion-based methods reconstruct pathological inputs as healthy counterparts, using the reconstruction error as an anomaly signal~\cite{wyatt2022anoddpm, wolleb2022diffusion, sanchez2022healthy}---requiring \textit{no anomaly labels during training}.
 
@@ -366,7 +366,7 @@ The FID of 144.43 reflects moderate distributional quality. As discussed in Sect
 \subsection{Explainability Analysis}
 \label{sec:explainability_results}
 
-Figure~\ref{fig:attention_maps} visualizes self-attention weights from the U-Net at resolutions $16 \times 16$ and $8 \times 8$, revealing that the model focuses on anatomically meaningful structures---ventricular boundaries, cortical folds, and tissue interfaces. Figure~\ref{fig:denoising_trajectory} compares denoising trajectories: for healthy inputs, reconstruction converges smoothly; for anomalous inputs, the model progressively ``corrects'' the tumor region, replacing it with healthy tissue.
+Figure~\ref{fig:attention_maps} visualizes self-attention weights from the U-Net at resolutions $16 \times 16$ and $8 \times 8$, revealing that the model focuses on anatomically meaningful structures---ventricular boundaries, cortical folds, and tissue interfaces. Evaluating whether such visualizations faithfully reflect model decisions remains an open challenge in medical imaging~\cite{lamprou2024evaluation}, and complementary approaches such as improved Grad-CAM pipelines have been proposed for related tasks~\cite{kallipolitis2023improving}. Figure~\ref{fig:denoising_trajectory} compares denoising trajectories: for healthy inputs, reconstruction converges smoothly; for anomalous inputs, the model progressively ``corrects'' the tumor region, replacing it with healthy tissue.
 
 \begin{figure}[t]
 \includegraphics[width=\textwidth]{../results/explainability/attention_maps.png}
