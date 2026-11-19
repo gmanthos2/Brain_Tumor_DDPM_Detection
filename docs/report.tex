@@ -27,6 +27,8 @@
 \usepackage{algorithm}
 \usepackage{algorithmic}
 \usepackage{hyperref}
+\usepackage{placeins}
+\usepackage{float}
 
 % -- Fix hyperref bookmark levels for svmult custom TOC entries --
 \makeatletter
@@ -366,15 +368,15 @@ The FID of 144.43 reflects moderate distributional quality. As discussed in Sect
 \subsection{Explainability Analysis}
 \label{sec:explainability_results}
 
-Figure~\ref{fig:attention_maps} visualizes self-attention weights from the U-Net at resolutions $16 \times 16$ and $8 \times 8$, revealing that the model focuses on anatomically meaningful structures---ventricular boundaries, cortical folds, and tissue interfaces. Evaluating whether such visualizations faithfully reflect model decisions remains an open challenge in medical imaging~\cite{lamprou2024evaluation}, and complementary approaches such as improved Grad-CAM pipelines have been proposed for related tasks~\cite{kallipolitis2023improving}. Figure~\ref{fig:denoising_trajectory} compares denoising trajectories: for healthy inputs, reconstruction converges smoothly; for anomalous inputs, the model progressively ``corrects'' the tumor region, replacing it with healthy tissue.
-
-\begin{figure}[t]
+\begin{figure}[H]
 \includegraphics[width=\textwidth]{../results/explainability/attention_maps.png}
 \caption{Self-attention maps from the U-Net during denoising. The model attends to anatomically relevant structures, demonstrating learned spatial awareness of brain morphology}
 \label{fig:attention_maps}
 \end{figure}
 
-\begin{figure}[t]
+Figure~\ref{fig:attention_maps} visualizes self-attention weights from the U-Net at resolutions $16 \times 16$ and $8 \times 8$, revealing that the model focuses on anatomically meaningful structures---ventricular boundaries, cortical folds, and tissue interfaces. Evaluating whether such visualizations faithfully reflect model decisions remains an open challenge in medical imaging~\cite{lamprou2024evaluation}, and complementary approaches such as improved Grad-CAM pipelines have been proposed for related tasks~\cite{kallipolitis2023improving}. Figure~\ref{fig:denoising_trajectory} compares denoising trajectories: for healthy inputs, reconstruction converges smoothly; for anomalous inputs, the model progressively ``corrects'' the tumor region, replacing it with healthy tissue.
+
+\begin{figure}[H]
 \includegraphics[width=\textwidth]{../results/explainability/denoising_trajectory_comparison.png}
 \caption{Denoising trajectory comparison between a healthy brain MRI (top) and a tumor-bearing MRI (bottom). The healthy-conditioned reconstruction progressively ``corrects'' the tumor region. Note that while the anomaly detection pipeline uses $t_{\text{start}} = 150$ to preserve healthy anatomy, this visualization initializes the trajectory at $t = 500$ to more clearly demonstrate the pronounced denoising effect and the model's structural correction capabilities over a longer schedule}
 \label{fig:denoising_trajectory}
@@ -383,6 +385,7 @@ Figure~\ref{fig:attention_maps} visualizes self-attention weights from the U-Net
 % ============================================================
 % 6. DISCUSSION
 % ============================================================
+\FloatBarrier
 \section{Discussion}
 \label{sec:discussion}
 
