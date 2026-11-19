@@ -28,11 +28,12 @@ def main():
     )
     
     count = 0
-    # skip the first one to get new examples
-    skip = 1
     
     for key, data in annotations.items():
         filename = data.get("filename")
+        if "193" not in filename:
+            continue
+            
         regions = data.get("regions", [])
         if not regions: continue
             
@@ -46,10 +47,6 @@ def main():
         processed_path = processed_dir / png_filename
         if not processed_path.exists(): continue
             
-        if skip > 0:
-            skip -= 1
-            continue
-            
         gt_mask = create_mask_from_regions(regions, orig_size, target_size=(256, 256))
         
         result = detector.detect(
@@ -62,18 +59,22 @@ def main():
         
         count += 1
         
-        fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+        fig, axes = plt.subplots(1, 4, figsize=(20, 5))
         axes[0].imshow(result["original"].numpy(), cmap="gray")
-        axes[0].set_title(f"Original ({filename})")
+        axes[0].set_title(f"Original ({filename})", fontsize=8)
         axes[0].axis("off")
         
         axes[1].imshow(gt_mask, cmap="gray")
-        axes[1].set_title("Ground Truth Mask")
+        axes[1].set_title("Ground Truth Mask", fontsize=8)
         axes[1].axis("off")
         
-        axes[2].imshow(anomaly_map, cmap="hot")
-        axes[2].set_title("Anomaly Heatmap")
+        axes[2].imshow(result["reconstruction"].numpy(), cmap="gray")
+        axes[2].set_title("Healthy Reconstruction", fontsize=8)
         axes[2].axis("off")
+        
+        axes[3].imshow(anomaly_map, cmap="hot")
+        axes[3].set_title("Anomaly Heatmap", fontsize=8)
+        axes[3].axis("off")
         
         qual_path = output_dir / f"qualitative_example_{count}.png"
         plt.savefig(qual_path, dpi=300, bbox_inches='tight')
