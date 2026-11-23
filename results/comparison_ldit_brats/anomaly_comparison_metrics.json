@@ -1,0 +1,77 @@
+{
+  "device": "cuda",
+  "seed": 42,
+  "num_workers": 1,
+  "max_images_per_split": 0,
+  "our_model": {
+    "checkpoint": "checkpoints/ddpm/step_100000.pt",
+    "config": {
+      "t_start": 150,
+      "guidance_scale": 7.5,
+      "ddim_steps": 50
+    },
+    "image_level": {
+      "auroc": 0.7585975308641975,
+      "auprc": 0.8537361014336694,
+      "optimal_threshold": 0.13903716206550598,
+      "accuracy": 0.7392592592592593,
+      "sensitivity": 0.8666666666666667,
+      "specificity": 0.48444444444444446,
+      "precision": 0.7707509881422925,
+      "f1_score": 0.8158995815899581,
+      "tp": 390,
+      "fp": 116,
+      "fn": 60,
+      "tn": 109,
+      "healthy_score_mean": 0.15842167658938303,
+      "healthy_score_std": 0.07250134825856788,
+      "anomalous_score_mean": 0.24384678622086842,
+      "anomalous_score_std": 0.1039430209756041,
+      "num_healthy": 225,
+      "num_anomalous": 450,
+      "total_time_sec": 118.32048416137695,
+      "avg_time_per_image_sec": 0.1752896061650029
+    }
+  },
+  "raddit_model": {
+    "variant": "LDiT-XL/1-BraTS",
+    "checkpoint": "baselines/rad-dit/ldit/checkpoints/ldit-xl1-vavae.pt",
+    "method": "euler",
+    "config": {
+      "t_start": 0.4,
+      "num_steps": 30,
+      "guidance_scale": 3.0,
+      "class_label": null,
+      "negative_label": 1003
+    },
+    "image_level": {
+      "auroc": 0.711674074074074,
+      "auprc": 0.8330078197933835,
+      "optimal_threshold": 0.3116235136985779,
+      "accuracy": 0.6355555555555555,
+      "sensitivity": 0.5622222222222222,
+      "specificity": 0.7822222222222223,
+      "precision": 0.8377483443708609,
+      "f1_score": 0.6728723404255319,
+      "tp": 253,
+      "fp": 49,
+      "fn": 197,
+      "tn": 176,
+      "healthy_score_mean": 0.2510640165540907,
+      "healthy_score_std": 0.08686341872456209,
+      "anomalous_score_mean": 0.3293150421645906,
+      "anomalous_score_std": 0.10643949589519086,
+      "num_healthy": 225,
+      "num_anomalous": 450,
+      "total_time_sec": 431.34150886535645,
+      "avg_time_per_image_sec": 0.6390244575783058
+    }
+  },
+  "pixel_level": {
+    "num_samples": 50,
+    "our_pixel_auroc": 0.8623685965570178,
+    "our_pixel_auprc": 0.3197850528042651,
+    "raddit_pixel_auroc": 0.7893303609663691,
+    "raddit_pixel_auprc": 0.14217950772173926
+  }
+}

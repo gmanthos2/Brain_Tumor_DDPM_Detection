@@ -170,7 +170,9 @@ def main():
 
     output_dir = ensure_dir(project_root / args.output)
 
+    import time
     print(f"Generating {args.num_samples} synthetic brain MRIs...")
+    start_time = time.time()
     images = generator.generate(
         num_samples=args.num_samples,
         guidance_scale=args.guidance_scale,
@@ -178,6 +180,11 @@ def main():
         batch_size=args.batch_size,
         seed=args.seed,
     )
+    end_time = time.time()
+    generation_time = end_time - start_time
+    print(f"Total generation time: {generation_time:.2f} seconds")
+    if args.num_samples > 0:
+        print(f"Average time per image: {generation_time / args.num_samples:.2f} seconds")
 
     # Save individual images
     individual_dir = ensure_dir(output_dir / "individual")

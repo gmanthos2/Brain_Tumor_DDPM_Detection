@@ -64,12 +64,69 @@ class RadDiTAnomalyDetector:
         self.sampling_method = sampling_method
         self.num_sampling_steps = num_sampling_steps
 
+        # Inspect checkpoint first to auto-detect in_channels and class_num
+        ckpt_p = Path(checkpoint_path)
+        if not ckpt_p.exists():
+            raise FileNotFoundError(f"Checkpoint not found at: {checkpoint_path}")
+
+        ckpt = torch.load(ckpt_p, map_location="cpu", weights_only=False)
+        if isinstance(ckpt, dict):
+            if "model_ema1" in ckpt:
+                state_dict = ckpt["model_ema1"]
+            elif "model" in ckpt:
+                state_dict = ckpt["model"]
+            else:
+                state_dict = ckpt
+        else:
+            state_dict = ckpt
+        del ckpt
+
+        first_conv_key = "net.x_embedder.proj1.weight"
+        if first_conv_key in state_dict:
+            ckpt_in_channels = state_dict[first_conv_key].shape[1]
+            if ckpt_in_channels != self.in_channels:
+                print(
+                    f"Notice: adjusting detector in_channels from {self.in_channels} to "
+                    f"{ckpt_in_channels} to match checkpoint."
+                )
+                self.in_channels = ckpt_in_channels
+
+        embed_key = "net.y_embedder.embedding_table.weight"
+        if embed_key in state_dict:
+            ckpt_class_num = state_dict[embed_key].shape[0] - 1
+            ckpt_hidden = state_dict[embed_key].shape[1]
+            if ckpt_class_num != self.class_num:
+                print(
+                    f"Notice: adjusting detector class_num from {self.class_num} to "
+                    f"{ckpt_class_num} to match checkpoint."
+                )
+                self.class_num = ckpt_class_num
+            # Auto-detect patch size & model variant if hidden_size mismatches
+            patch_size = (
+                state_dict[first_conv_key].shape[2]
+                if first_conv_key in state_dict
+                else 16
+            )
+            hidden_to_prefix = {768: "JiT-B", 1024: "JiT-L", 1280: "JiT-H"}
+            inferred_variant = (
+                f"{hidden_to_prefix[ckpt_hidden]}/{patch_size}"
+                if ckpt_hidden in hidden_to_prefix
+                else None
+            )
+            if inferred_variant and inferred_variant != model_variant:
+                print(
+                    f"Notice: checkpoint hidden_size={ckpt_hidden}, patch={patch_size} "
+                    f"matches {inferred_variant} (overriding requested {model_variant})."
+                )
+                model_variant = inferred_variant
+        self.model_variant = model_variant
+
         # Create dummy args object required by Denoiser.__init__
         args = types.SimpleNamespace(
             model=model_variant,
             img_size=img_size,
-            in_channels=in_channels,
-            class_num=class_num,
+            in_channels=self.in_channels,
+            class_num=self.class_num,
             attn_dropout=0.0,
             proj_dropout=0.0,
             label_drop_prob=0.1,
@@ -88,7 +145,10 @@ class RadDiTAnomalyDetector:
         )
 
         self.denoiser = Denoiser(args).to(self.device)
-        self.load_checkpoint(checkpoint_path)
+        missing, unexpected = self.denoiser.load_state_dict(state_dict, strict=False)
+        if missing or unexpected:
+            print(f"Checkpoint load warnings — missing: {len(missing)}, unexpected: {len(unexpected)}")
+        print(f"Loaded Rad-DiT ({model_variant}) checkpoint successfully from: {ckpt_p.name} on {self.device}")
         self.denoiser.eval()
 
         # Image transform (matching our pipeline: 256x256 grayscale normalized to [-1, 1])
@@ -104,8 +164,7 @@ class RadDiTAnomalyDetector:
         if not ckpt_p.exists():
             raise FileNotFoundError(f"Checkpoint not found at: {checkpoint_path}")
 
-        ckpt = torch.load(ckpt_p, map_location=self.device)
-
+        ckpt = torch.load(ckpt_p, map_location=self.device, weights_only=False)
         if isinstance(ckpt, dict):
             if "model_ema1" in ckpt:
                 state_dict = ckpt["model_ema1"]
@@ -116,19 +175,26 @@ class RadDiTAnomalyDetector:
         else:
             state_dict = ckpt
 
-        # Auto-detect channel mismatch if checkpoint was trained with different in_channels
-        first_conv_key = "net.x_embedder.proj1.weight"
-        if first_conv_key in state_dict:
-            ckpt_in_channels = state_dict[first_conv_key].shape[1]
-            if ckpt_in_channels != self.in_channels:
-                print(
-                    f"Notice: adjusting detector in_channels from {self.in_channels} to "
-                    f"{ckpt_in_channels} to match checkpoint."
-                )
-                self.in_channels = ckpt_in_channels
-
         self.denoiser.load_state_dict(state_dict, strict=False)
         print(f"Loaded Rad-DiT checkpoint successfully from: {ckpt_p.name}")
+
+    @torch.no_grad()
+    def _predict_velocity(
+        self, z: torch.Tensor, t: torch.Tensor, labels: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Compute flow velocity, skipping redundant unconditional pass when CFG is inactive
+        (cfg_scale == 1.0 or labels are already the unconditional token).
+        """
+        use_amp = self.device.type == "cuda"
+        amp_dtype = torch.bfloat16 if use_amp else torch.float32
+        with torch.amp.autocast(device_type=self.device.type, dtype=amp_dtype, enabled=use_amp):
+            cfg_scale = self.denoiser.cfg_scale
+            is_uncond = bool(torch.all(labels == self.denoiser.cfg_drop_index).item())
+            if cfg_scale == 1.0 or is_uncond:
+                x_pred = self.denoiser.net(z, t.flatten(), labels)
+                return (x_pred.float() - z) / (1.0 - t).clamp_min(self.denoiser.t_eps)
+            return self.denoiser._forward_sample(z, t, labels).float()
 
     @torch.no_grad()
     def _flow_matching_forward(
@@ -163,16 +229,23 @@ class RadDiTAnomalyDetector:
         timesteps = torch.linspace(t_start, 1.0, steps + 1, device=self.device)
         timesteps = timesteps.view(-1, *([1] * z_start.ndim)).expand(-1, bsz, -1, -1, -1)
 
-        stepper = self.denoiser._heun_step if method == "heun" else self.denoiser._euler_step
-
         z = z_start
         for i in range(steps - 1):
             t = timesteps[i]
             t_next = timesteps[i + 1]
-            z = stepper(z, t, t_next, labels)
+            v_t = self._predict_velocity(z, t, labels)
+            if method == "heun":
+                z_euler = z + (t_next - t) * v_t
+                v_next = self._predict_velocity(z_euler, t_next, labels)
+                z = z + (t_next - t) * 0.5 * (v_t + v_next)
+            else:
+                z = z + (t_next - t) * v_t
 
         # Final step using Euler
-        z = self.denoiser._euler_step(z, timesteps[-2], timesteps[-1], labels)
+        t = timesteps[-2]
+        t_next = timesteps[-1]
+        v_t = self._predict_velocity(z, t, labels)
+        z = z + (t_next - t) * v_t
         return z.clamp(-1.0, 1.0)
 
     @torch.no_grad()
